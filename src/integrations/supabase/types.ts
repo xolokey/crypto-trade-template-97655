@@ -38,6 +38,132 @@ export type Database = {
         }
         Relationships: []
       }
+      stock_candles: {
+        Row: {
+          close: number
+          created_at: string | null
+          high: number
+          id: string
+          interval: string
+          low: number
+          open: number
+          stock_id: string | null
+          timestamp: string
+          volume: number
+        }
+        Insert: {
+          close: number
+          created_at?: string | null
+          high: number
+          id?: string
+          interval: string
+          low: number
+          open: number
+          stock_id?: string | null
+          timestamp: string
+          volume: number
+        }
+        Update: {
+          close?: number
+          created_at?: string | null
+          high?: number
+          id?: string
+          interval?: string
+          low?: number
+          open?: number
+          stock_id?: string | null
+          timestamp?: string
+          volume?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "stock_candles_stock_id_fkey"
+            columns: ["stock_id"]
+            isOneToOne: false
+            referencedRelation: "stocks"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      stock_news: {
+        Row: {
+          content: string
+          created_at: string | null
+          id: string
+          published_at: string
+          sentiment: string | null
+          source: string | null
+          stock_id: string | null
+          title: string
+        }
+        Insert: {
+          content: string
+          created_at?: string | null
+          id?: string
+          published_at: string
+          sentiment?: string | null
+          source?: string | null
+          stock_id?: string | null
+          title: string
+        }
+        Update: {
+          content?: string
+          created_at?: string | null
+          id?: string
+          published_at?: string
+          sentiment?: string | null
+          source?: string | null
+          stock_id?: string | null
+          title?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "stock_news_stock_id_fkey"
+            columns: ["stock_id"]
+            isOneToOne: false
+            referencedRelation: "stocks"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      stock_predictions: {
+        Row: {
+          confidence_score: number | null
+          created_at: string | null
+          id: string
+          prediction_data: Json
+          prediction_type: string
+          stock_id: string | null
+          valid_until: string | null
+        }
+        Insert: {
+          confidence_score?: number | null
+          created_at?: string | null
+          id?: string
+          prediction_data: Json
+          prediction_type: string
+          stock_id?: string | null
+          valid_until?: string | null
+        }
+        Update: {
+          confidence_score?: number | null
+          created_at?: string | null
+          id?: string
+          prediction_data?: Json
+          prediction_type?: string
+          stock_id?: string | null
+          valid_until?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "stock_predictions_stock_id_fkey"
+            columns: ["stock_id"]
+            isOneToOne: false
+            referencedRelation: "stocks"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       stock_prices: {
         Row: {
           id: string
@@ -73,48 +199,75 @@ export type Database = {
       stocks: {
         Row: {
           change_percent: number | null
+          close_price: number | null
           created_at: string | null
           current_price: number | null
           exchange: string
+          high_price: number | null
           id: string
           is_nifty_50: boolean | null
           is_sensex_30: boolean | null
           last_updated: string | null
+          low_price: number | null
           market_cap: number | null
+          market_cap_category: string | null
           name: string
+          open_price: number | null
+          pe_ratio: number | null
+          prev_close: number | null
           sector: string | null
           symbol: string
           volume: number | null
+          week_52_high: number | null
+          week_52_low: number | null
         }
         Insert: {
           change_percent?: number | null
+          close_price?: number | null
           created_at?: string | null
           current_price?: number | null
           exchange: string
+          high_price?: number | null
           id?: string
           is_nifty_50?: boolean | null
           is_sensex_30?: boolean | null
           last_updated?: string | null
+          low_price?: number | null
           market_cap?: number | null
+          market_cap_category?: string | null
           name: string
+          open_price?: number | null
+          pe_ratio?: number | null
+          prev_close?: number | null
           sector?: string | null
           symbol: string
           volume?: number | null
+          week_52_high?: number | null
+          week_52_low?: number | null
         }
         Update: {
           change_percent?: number | null
+          close_price?: number | null
           created_at?: string | null
           current_price?: number | null
           exchange?: string
+          high_price?: number | null
           id?: string
           is_nifty_50?: boolean | null
           is_sensex_30?: boolean | null
           last_updated?: string | null
+          low_price?: number | null
           market_cap?: number | null
+          market_cap_category?: string | null
           name?: string
+          open_price?: number | null
+          pe_ratio?: number | null
+          prev_close?: number | null
           sector?: string | null
           symbol?: string
           volume?: number | null
+          week_52_high?: number | null
+          week_52_low?: number | null
         }
         Relationships: []
       }

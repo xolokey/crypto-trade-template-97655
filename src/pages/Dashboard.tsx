@@ -103,30 +103,41 @@ export default function Dashboard() {
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
-      <header className="border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 sticky top-0 z-50">
+      <header className="border-b border-border/50 bg-card/30 backdrop-blur-xl sticky top-0 z-50">
         <div className="container flex h-16 items-center justify-between px-4">
-          <div className="flex items-center gap-2">
-            <TrendingUp className="h-6 w-6 text-primary" />
-            <h1 className="text-xl font-bold">Lokey & C0.</h1>
+          <div className="flex items-center gap-3">
+            <div className="h-10 w-10 rounded-lg bg-primary flex items-center justify-center">
+              <TrendingUp className="h-6 w-6 text-primary-foreground" />
+            </div>
+            <div>
+              <h1 className="text-xl font-bold">Lokey & C0.</h1>
+              <p className="text-xs text-muted-foreground">Indian Stock Market</p>
+            </div>
           </div>
-          <Button onClick={handleSignOut} variant="outline" size="sm">
+          <Button onClick={handleSignOut} variant="ghost" size="sm" className="text-muted-foreground hover:text-foreground">
             <LogOut className="mr-2 h-4 w-4" />
             Sign Out
           </Button>
         </div>
       </header>
 
-      <div className="container py-8 px-4">
+      <div className="container py-8 px-4 max-w-7xl">
+        {/* Welcome Section */}
+        <div className="mb-8">
+          <h2 className="text-3xl font-bold mb-2">Welcome back</h2>
+          <p className="text-muted-foreground">Track your favorite Indian stocks and get AI-powered insights</p>
+        </div>
+
         {/* Search Bar */}
         <form onSubmit={handleSearch} className="mb-8">
-          <div className="relative max-w-xl mx-auto">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+          <div className="relative max-w-2xl">
+            <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
             <Input
               type="text"
               placeholder="Search stocks by name or symbol..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-10"
+              className="pl-12 h-12 bg-card/50 backdrop-blur border-border/50"
             />
           </div>
         </form>
@@ -134,8 +145,8 @@ export default function Dashboard() {
         {/* Search Results */}
         {searchResults.length > 0 && (
           <div className="mb-8">
-            <h2 className="text-2xl font-bold mb-4">Search Results</h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            <h2 className="text-2xl font-bold mb-6">Search Results</h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
               {searchResults.map((stock) => (
                 <StockCard key={stock.id} stock={stock} />
               ))}
@@ -144,18 +155,18 @@ export default function Dashboard() {
         )}
 
         <Tabs defaultValue="nifty" className="w-full">
-          <TabsList className="grid w-full max-w-md mx-auto grid-cols-3">
+          <TabsList className="grid w-full max-w-md grid-cols-3 bg-card/50 backdrop-blur">
             <TabsTrigger value="nifty">Nifty 50</TabsTrigger>
             <TabsTrigger value="sensex">Sensex 30</TabsTrigger>
             <TabsTrigger value="watchlist">Watchlist</TabsTrigger>
           </TabsList>
 
           <TabsContent value="nifty" className="mt-6">
-            <h2 className="text-2xl font-bold mb-4">Nifty 50 Stocks</h2>
+            <h2 className="text-2xl font-bold mb-6">Nifty 50 Stocks</h2>
             {loading ? (
-              <div className="text-center py-8 text-muted-foreground">Loading stocks...</div>
+              <div className="text-center py-12 text-muted-foreground">Loading stocks...</div>
             ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
                 {niftyStocks.map((stock) => (
                   <StockCard key={stock.id} stock={stock} />
                 ))}
@@ -164,11 +175,11 @@ export default function Dashboard() {
           </TabsContent>
 
           <TabsContent value="sensex" className="mt-6">
-            <h2 className="text-2xl font-bold mb-4">Sensex 30 Stocks</h2>
+            <h2 className="text-2xl font-bold mb-6">Sensex 30 Stocks</h2>
             {loading ? (
-              <div className="text-center py-8 text-muted-foreground">Loading stocks...</div>
+              <div className="text-center py-12 text-muted-foreground">Loading stocks...</div>
             ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
                 {sensexStocks.map((stock) => (
                   <StockCard key={stock.id} stock={stock} />
                 ))}

@@ -4,6 +4,7 @@ import { Star, TrendingUp, TrendingDown } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 
 interface Stock {
   id: string;
@@ -16,6 +17,7 @@ interface Stock {
 }
 
 export const StockCard = ({ stock }: { stock: Stock }) => {
+  const navigate = useNavigate();
   const [isInWatchlist, setIsInWatchlist] = useState(false);
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
@@ -97,7 +99,10 @@ export const StockCard = ({ stock }: { stock: Stock }) => {
   const isPositive = stock.change_percent >= 0;
 
   return (
-    <Card className="hover:shadow-lg transition-shadow">
+    <Card 
+      className="hover:shadow-lg transition-all cursor-pointer hover:scale-105 bg-card/50 backdrop-blur"
+      onClick={() => navigate(`/stock/${stock.id}`)}
+    >
       <CardHeader className="flex flex-row items-start justify-between space-y-0 pb-2">
         <div>
           <CardTitle className="text-lg font-bold">{stock.symbol}</CardTitle>
@@ -106,7 +111,10 @@ export const StockCard = ({ stock }: { stock: Stock }) => {
         <Button
           variant="ghost"
           size="icon"
-          onClick={toggleWatchlist}
+          onClick={(e) => {
+            e.stopPropagation();
+            toggleWatchlist();
+          }}
           disabled={loading}
           className="h-8 w-8"
         >

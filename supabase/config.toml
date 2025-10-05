@@ -1,1 +1,7 @@
 project_id = "msesvmlvhrhdipfbhvub"
+
+[functions.seed-stocks]
+verify_jwt = false
+
+[functions.stock-analysis]
+verify_jwt = false
