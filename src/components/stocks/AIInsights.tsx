@@ -34,14 +34,34 @@ export const AIInsights = ({ stockId, symbol, name, currentPrice, changePercent 
         }
       });
 
-      if (error) throw error;
+      if (error) {
+        console.error('Supabase function error:', error);
+        throw error;
+      }
+      
+      console.log('Received data:', data);
+      
+      if (!data || !data.analysis) {
+        throw new Error('No analysis data received');
+      }
       
       const parsedNews = JSON.parse(data.analysis);
+      console.log('Parsed news:', parsedNews);
+      
+      if (!Array.isArray(parsedNews)) {
+        throw new Error('Invalid news format - expected array');
+      }
+      
       setNews(parsedNews);
+      toast({
+        title: "Success",
+        description: "Latest news loaded successfully",
+      });
     } catch (error: any) {
+      console.error('News fetch error:', error);
       toast({
         title: "Error fetching news",
-        description: error.message,
+        description: error.message || "Failed to load news. Please try again.",
         variant: "destructive",
       });
     } finally {
@@ -62,14 +82,34 @@ export const AIInsights = ({ stockId, symbol, name, currentPrice, changePercent 
         }
       });
 
-      if (error) throw error;
+      if (error) {
+        console.error('Supabase function error:', error);
+        throw error;
+      }
+      
+      console.log('Received prediction data:', data);
+      
+      if (!data || !data.analysis) {
+        throw new Error('No analysis data received');
+      }
       
       const parsedPrediction = JSON.parse(data.analysis);
+      console.log('Parsed prediction:', parsedPrediction);
+      
+      if (typeof parsedPrediction !== 'object' || !parsedPrediction.prediction) {
+        throw new Error('Invalid prediction format');
+      }
+      
       setPrediction(parsedPrediction);
+      toast({
+        title: "Success",
+        description: "AI prediction generated successfully",
+      });
     } catch (error: any) {
+      console.error('Prediction fetch error:', error);
       toast({
         title: "Error fetching prediction",
-        description: error.message,
+        description: error.message || "Failed to generate prediction. Please try again.",
         variant: "destructive",
       });
     } finally {

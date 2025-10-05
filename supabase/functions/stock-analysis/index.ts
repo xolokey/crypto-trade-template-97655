@@ -20,31 +20,47 @@ serve(async (req) => {
     }
 
     let systemPrompt = '';
+    let userPrompt = '';
     
     if (analysisType === 'news') {
-      systemPrompt = `You are a financial news analyst specializing in Indian stock markets. Generate realistic, recent news and events for ${stockName} (${stockSymbol}). Include:
-- 3-5 news items with dates from the last week
-- Each news item should have: title, brief content, source, sentiment (positive/negative/neutral), and date
-- Make news relevant to current price (₹${currentPrice}) and change (${changePercent}%)
-- Format as JSON array with fields: title, content, source, sentiment, date`;
+      systemPrompt = `You are a financial news analyst. You MUST respond with ONLY valid JSON, no markdown, no code blocks, no explanations.`;
+      userPrompt = `Generate 3-5 realistic news items for ${stockName} (${stockSymbol}) with current price ₹${currentPrice} and change ${changePercent}%. 
+      
+Return ONLY a JSON array in this EXACT format:
+[
+  {
+    "title": "News headline here",
+    "content": "Brief news content here",
+    "source": "News source name",
+    "sentiment": "positive",
+    "date": "2025-10-04"
+  }
+]
+
+Remember: Return ONLY the JSON array, nothing else.`;
     } else if (analysisType === 'prediction') {
-      systemPrompt = `You are an expert stock analyst specializing in technical and fundamental analysis of Indian stocks. For ${stockName} (${stockSymbol}):
-- Current Price: ₹${currentPrice}
-- 24h Change: ${changePercent}%
+      systemPrompt = `You are a stock analyst. You MUST respond with ONLY valid JSON, no markdown, no code blocks, no explanations.`;
+      userPrompt = `Analyze ${stockName} (${stockSymbol}) with current price ₹${currentPrice} and change ${changePercent}%.
 
-Provide detailed prediction analysis including:
-1. Short-term outlook (1-5 days)
-2. Medium-term outlook (1-3 months)
-3. Key support and resistance levels
-4. Technical indicators analysis
-5. Risk factors
-6. Confidence score (0-100)
+Return ONLY a JSON object in this EXACT format:
+{
+  "prediction": "Short prediction text here",
+  "timeframe": "1-5 days",
+  "supportLevel": ${Math.round(currentPrice * 0.95)},
+  "resistanceLevel": ${Math.round(currentPrice * 1.05)},
+  "technicalSignals": ["Signal 1", "Signal 2", "Signal 3"],
+  "riskFactors": ["Risk 1", "Risk 2"],
+  "confidenceScore": 75
+}
 
-Format as JSON with: prediction, timeframe, supportLevel, resistanceLevel, technicalSignals, riskFactors, confidenceScore`;
+Remember: Return ONLY the JSON object, nothing else.`;
     } else {
-      systemPrompt = `You are a comprehensive stock market analyst. Provide detailed analysis for ${stockName} (${stockSymbol}) including technical patterns, trend analysis, and structural insights.`;
+      systemPrompt = `You are a stock analyst. Return only valid JSON.`;
+      userPrompt = `Analyze ${stockName} (${stockSymbol})`;
     }
 
+    console.log('Calling AI with analysis type:', analysisType);
+    
     const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
       method: 'POST',
       headers: {
@@ -55,7 +71,7 @@ Format as JSON with: prediction, timeframe, supportLevel, resistanceLevel, techn
         model: 'google/gemini-2.5-flash',
         messages: [
           { role: 'system', content: systemPrompt },
-          { role: 'user', content: `Analyze ${stockName} (${stockSymbol})` }
+          { role: 'user', content: userPrompt }
         ],
       }),
     });
@@ -67,7 +83,20 @@ Format as JSON with: prediction, timeframe, supportLevel, resistanceLevel, techn
     }
 
     const data = await response.json();
-    const analysisResult = data.choices[0].message.content;
+    let analysisResult = data.choices[0].message.content;
+    
+    console.log('Raw AI response:', analysisResult);
+    
+    // Clean up the response - remove markdown code blocks if present
+    analysisResult = analysisResult.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
+    
+    // Validate it's valid JSON
+    try {
+      JSON.parse(analysisResult);
+    } catch (parseError) {
+      console.error('Invalid JSON from AI:', analysisResult);
+      throw new Error('AI returned invalid JSON format');
+    }
 
     return new Response(JSON.stringify({ analysis: analysisResult }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
