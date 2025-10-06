@@ -1,6 +1,8 @@
 using Microsoft.AspNetCore.Mvc;
 using StockTracker.Core.Interfaces;
 using StockTracker.Core.Models;
+using StockTracker.Core.Validation;
+using StockTracker.Core.Exceptions;
 
 namespace StockTracker.API.Controllers;
 
@@ -27,36 +29,23 @@ public class MarketDataController : ControllerBase
     [ProducesResponseType(404)]
     public async Task<IActionResult> GetQuote(string symbol)
     {
-        try
+        // Validate and sanitize input
+        var validatedSymbol = InputValidator.ValidateStockSymbol(symbol);
+        
+        var quote = await _marketDataService.GetStockQuoteAsync(validatedSymbol);
+        
+        if (quote == null)
         {
-            var quote = await _marketDataService.GetStockQuoteAsync(symbol);
-            
-            if (quote == null)
-            {
-                return NotFound(new ApiResponse<StockQuote>
-                {
-                    Success = false,
-                    Error = $"Stock {symbol} not found"
-                });
-            }
+            throw new NotFoundException("Stock", validatedSymbol);
+        }
 
-            return Ok(new ApiResponse<StockQuote>
-            {
-                Success = true,
-                Data = quote,
-                Source = quote.Source,
-                Timestamp = DateTime.UtcNow
-            });
-        }
-        catch (Exception ex)
+        return Ok(new ApiResponse<StockQuote>
         {
-            _logger.LogError(ex, "Error fetching quote for {Symbol}", symbol);
-            return StatusCode(500, new ApiResponse<StockQuote>
-            {
-                Success = false,
-                Error = "Internal server error"
-            });
-        }
+            Success = true,
+            Data = quote,
+            Source = quote.Source,
+            Timestamp = DateTime.UtcNow
+        });
     }
 
     /// <summary>
@@ -66,39 +55,17 @@ public class MarketDataController : ControllerBase
     [ProducesResponseType(typeof(ApiResponse<List<StockQuote>>), 200)]
     public async Task<IActionResult> GetQuotes([FromQuery] string symbols)
     {
-        try
+        // Validate and sanitize input
+        var symbolList = InputValidator.ValidateStockSymbols(symbols);
+
+        var quotes = await _marketDataService.GetMultipleQuotesAsync(symbolList);
+
+        return Ok(new ApiResponse<List<StockQuote>>
         {
-            var symbolList = symbols.Split(',', StringSplitOptions.RemoveEmptyEntries)
-                                   .Select(s => s.Trim())
-                                   .ToList();
-
-            if (!symbolList.Any())
-            {
-                return BadRequest(new ApiResponse<List<StockQuote>>
-                {
-                    Success = false,
-                    Error = "No symbols provided"
-                });
-            }
-
-            var quotes = await _marketDataService.GetMultipleQuotesAsync(symbolList);
-
-            return Ok(new ApiResponse<List<StockQuote>>
-            {
-                Success = true,
-                Data = quotes,
-                Timestamp = DateTime.UtcNow
-            });
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error fetching multiple quotes");
-            return StatusCode(500, new ApiResponse<List<StockQuote>>
-            {
-                Success = false,
-                Error = "Internal server error"
-            });
-        }
+            Success = true,
+            Data = quotes,
+            Timestamp = DateTime.UtcNow
+        });
     }
 
     /// <summary>
@@ -108,26 +75,14 @@ public class MarketDataController : ControllerBase
     [ProducesResponseType(typeof(ApiResponse<List<IndexData>>), 200)]
     public async Task<IActionResult> GetIndices()
     {
-        try
-        {
-            var indices = await _marketDataService.GetMarketIndicesAsync();
+        var indices = await _marketDataService.GetMarketIndicesAsync();
 
-            return Ok(new ApiResponse<List<IndexData>>
-            {
-                Success = true,
-                Data = indices,
-                Timestamp = DateTime.UtcNow
-            });
-        }
-        catch (Exception ex)
+        return Ok(new ApiResponse<List<IndexData>>
         {
-            _logger.LogError(ex, "Error fetching market indices");
-            return StatusCode(500, new ApiResponse<List<IndexData>>
-            {
-                Success = false,
-                Error = "Internal server error"
-            });
-        }
+            Success = true,
+            Data = indices,
+            Timestamp = DateTime.UtcNow
+        });
     }
 
     /// <summary>
@@ -140,25 +95,22 @@ public class MarketDataController : ControllerBase
         [FromQuery] string interval = "1day",
         [FromQuery] int outputSize = 30)
     {
-        try
+        // Validate and sanitize input
+        var validatedSymbol = InputValidator.ValidateStockSymbol(symbol);
+        var sanitizedInterval = InputValidator.SanitizeString(interval, 20);
+        
+        if (outputSize < 1 || outputSize > 365)
         {
-            var history = await _marketDataService.GetHistoricalDataAsync(symbol, interval, outputSize);
+            throw new ValidationException("outputSize", "Output size must be between 1 and 365");
+        }
 
-            return Ok(new ApiResponse<List<HistoricalData>>
-            {
-                Success = true,
-                Data = history,
-                Timestamp = DateTime.UtcNow
-            });
-        }
-        catch (Exception ex)
+        var history = await _marketDataService.GetHistoricalDataAsync(validatedSymbol, sanitizedInterval, outputSize);
+
+        return Ok(new ApiResponse<List<HistoricalData>>
         {
-            _logger.LogError(ex, "Error fetching history for {Symbol}", symbol);
-            return StatusCode(500, new ApiResponse<List<HistoricalData>>
-            {
-                Success = false,
-                Error = "Internal server error"
-            });
-        }
+            Success = true,
+            Data = history,
+            Timestamp = DateTime.UtcNow
+        });
     }
 }

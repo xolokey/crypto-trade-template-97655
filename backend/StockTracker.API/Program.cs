@@ -1,6 +1,7 @@
 using Serilog;
 using StockTracker.Core.Interfaces;
 using StockTracker.Infrastructure.Services;
+using StockTracker.API.Middleware;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -78,6 +79,13 @@ builder.Services.AddHealthChecks();
 var app = builder.Build();
 
 // Configure the HTTP request pipeline
+
+// Add global exception handler (must be first)
+app.UseMiddleware<GlobalExceptionHandlerMiddleware>();
+
+// Add request logging
+app.UseMiddleware<RequestLoggingMiddleware>();
+
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();

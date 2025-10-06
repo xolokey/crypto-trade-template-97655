@@ -1,10 +1,13 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Bell } from 'lucide-react';
+import { useFormValidation } from '@/hooks/useFormValidation';
+import { alertValidationSchema, AlertFormValues } from '@/utils/validationSchemas';
+import { ErrorMessage } from '@/components/ui/ErrorMessage';
 
 interface CreateAlertDialogProps {
   open: boolean;
@@ -24,24 +27,44 @@ export function CreateAlertDialog({
   onCreateAlert
 }: CreateAlertDialogProps) {
   const [alertType, setAlertType] = useState<'above' | 'below' | 'change_up' | 'change_down'>('above');
-  const [targetPrice, setTargetPrice] = useState('');
-  const [targetPercent, setTargetPercent] = useState('');
   const [loading, setLoading] = useState(false);
+
+  const {
+    values,
+    errors,
+    touched,
+    isValid,
+    handleChange,
+    handleBlur,
+    validateAll,
+    reset
+  } = useFormValidation<AlertFormValues>(
+    { targetPrice: '', targetPercent: '' },
+    alertValidationSchema
+  );
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    // Validate all fields
+    if (!validateAll()) {
+      return;
+    }
+
     setLoading(true);
 
     try {
+      const isPriceAlert = alertType === 'above' || alertType === 'below';
+      
       const alert = {
         stock_symbol: stockSymbol,
         stock_name: stockName,
         alert_type: alertType,
         current_price: currentPrice,
         is_active: true,
-        ...(alertType === 'above' || alertType === 'below' 
-          ? { target_price: parseFloat(targetPrice) }
-          : { target_percent: parseFloat(targetPercent) }
+        ...(isPriceAlert
+          ? { target_price: parseFloat(values.targetPrice) }
+          : { target_percent: parseFloat(values.targetPercent) }
         )
       };
 
@@ -49,8 +72,7 @@ export function CreateAlertDialog({
       onOpenChange(false);
       
       // Reset form
-      setTargetPrice('');
-      setTargetPercent('');
+      reset();
     } catch (error) {
       console.error('Error creating alert:', error);
     } finally {
@@ -59,6 +81,14 @@ export function CreateAlertDialog({
   };
 
   const isPriceAlert = alertType === 'above' || alertType === 'below';
+
+  // Reset form when dialog closes
+  useEffect(() => {
+    if (!open) {
+      reset();
+      setAlertType('above');
+    }
+  }, [open, reset]);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -106,10 +136,12 @@ export function CreateAlertDialog({
                 type="number"
                 step="0.01"
                 placeholder="Enter target price"
-                value={targetPrice}
-                onChange={(e) => setTargetPrice(e.target.value)}
-                required
+                value={values.targetPrice}
+                onChange={(e) => handleChange('targetPrice', e.target.value)}
+                onBlur={() => handleBlur('targetPrice')}
+                className={touched.targetPrice && errors.targetPrice ? 'border-destructive' : ''}
               />
+              {touched.targetPrice && <ErrorMessage error={errors.targetPrice} />}
             </div>
           ) : (
             <div className="space-y-2">
@@ -119,10 +151,12 @@ export function CreateAlertDialog({
                 type="number"
                 step="0.1"
                 placeholder="Enter percentage"
-                value={targetPercent}
-                onChange={(e) => setTargetPercent(e.target.value)}
-                required
+                value={values.targetPercent}
+                onChange={(e) => handleChange('targetPercent', e.target.value)}
+                onBlur={() => handleBlur('targetPercent')}
+                className={touched.targetPercent && errors.targetPercent ? 'border-destructive' : ''}
               />
+              {touched.targetPercent && <ErrorMessage error={errors.targetPercent} />}
             </div>
           )}
 
@@ -130,7 +164,11 @@ export function CreateAlertDialog({
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)} className="flex-1">
               Cancel
             </Button>
-            <Button type="submit" disabled={loading} className="flex-1">
+            <Button 
+              type="submit" 
+              disabled={loading || (isPriceAlert ? !values.targetPrice : !values.targetPercent)} 
+              className="flex-1"
+            >
               {loading ? 'Creating...' : 'Create Alert'}
             </Button>
           </div>

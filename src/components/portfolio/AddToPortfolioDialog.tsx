@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -7,6 +7,9 @@ import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { Calculator, TrendingUp } from 'lucide-react';
 import { NSEStock } from '@/data/nseStocks';
+import { useFormValidation } from '@/hooks/useFormValidation';
+import { portfolioValidationSchema, PortfolioFormValues } from '@/utils/validationSchemas';
+import { ErrorMessage } from '@/components/ui/ErrorMessage';
 
 interface AddToPortfolioDialogProps {
   open: boolean;
@@ -23,30 +26,52 @@ const AddToPortfolioDialog = ({
   onConfirm,
   currentPrice = 0
 }: AddToPortfolioDialogProps) => {
-  const [quantity, setQuantity] = useState<string>('');
-  const [price, setPrice] = useState<string>(currentPrice.toString());
   const [loading, setLoading] = useState(false);
+
+  const {
+    values,
+    errors,
+    touched,
+    isValid,
+    handleChange,
+    handleBlur,
+    validateAll,
+    reset,
+    setValues
+  } = useFormValidation<PortfolioFormValues>(
+    { quantity: '', price: currentPrice.toString() },
+    portfolioValidationSchema
+  );
+
+  // Update price when currentPrice changes
+  useEffect(() => {
+    if (currentPrice > 0) {
+      setValues({ ...values, price: currentPrice.toString() });
+    }
+  }, [currentPrice]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!stock || !quantity || !price) return;
+    if (!stock) return;
 
-    const quantityNum = parseInt(quantity);
-    const priceNum = parseFloat(price);
+    // Validate all fields
+    if (!validateAll()) {
+      return;
+    }
 
-    if (quantityNum <= 0 || priceNum <= 0) return;
+    const quantityNum = parseInt(values.quantity);
+    const priceNum = parseFloat(values.price);
 
     setLoading(true);
     try {
-      await onConfirm({
+      onConfirm({
         stock,
         quantity: quantityNum,
         price: priceNum
       });
       
       // Reset form
-      setQuantity('');
-      setPrice(currentPrice.toString());
+      reset();
       onOpenChange(false);
     } catch (error) {
       console.error('Error adding to portfolio:', error);
@@ -55,11 +80,18 @@ const AddToPortfolioDialog = ({
     }
   };
 
-  const totalInvestment = quantity && price ? 
-    (parseInt(quantity) * parseFloat(price)).toLocaleString('en-IN', {
+  const totalInvestment = values.quantity && values.price ? 
+    (parseInt(values.quantity) * parseFloat(values.price)).toLocaleString('en-IN', {
       style: 'currency',
       currency: 'INR'
     }) : '₹0';
+
+  // Reset form when dialog closes
+  useEffect(() => {
+    if (!open) {
+      reset();
+    }
+  }, [open, reset]);
 
   if (!stock) return null;
 
@@ -103,10 +135,12 @@ const AddToPortfolioDialog = ({
                 min="1"
                 step="1"
                 placeholder="Enter number of shares"
-                value={quantity}
-                onChange={(e) => setQuantity(e.target.value)}
-                required
+                value={values.quantity}
+                onChange={(e) => handleChange('quantity', e.target.value)}
+                onBlur={() => handleBlur('quantity')}
+                className={touched.quantity && errors.quantity ? 'border-destructive' : ''}
               />
+              {touched.quantity && <ErrorMessage error={errors.quantity} />}
             </div>
 
             {/* Price Input */}
@@ -118,10 +152,12 @@ const AddToPortfolioDialog = ({
                 min="0.01"
                 step="0.01"
                 placeholder="Enter purchase price"
-                value={price}
-                onChange={(e) => setPrice(e.target.value)}
-                required
+                value={values.price}
+                onChange={(e) => handleChange('price', e.target.value)}
+                onBlur={() => handleBlur('price')}
+                className={touched.price && errors.price ? 'border-destructive' : ''}
               />
+              {touched.price && <ErrorMessage error={errors.price} />}
               <p className="text-xs text-muted-foreground">
                 Enter the price at which you bought or plan to buy the shares
               </p>
@@ -138,11 +174,11 @@ const AddToPortfolioDialog = ({
               <div className="grid grid-cols-2 gap-4 text-sm">
                 <div>
                   <p className="text-muted-foreground">Quantity</p>
-                  <p className="font-medium">{quantity || '0'} shares</p>
+                  <p className="font-medium">{values.quantity || '0'} shares</p>
                 </div>
                 <div>
                   <p className="text-muted-foreground">Price per Share</p>
-                  <p className="font-medium">₹{price || '0'}</p>
+                  <p className="font-medium">₹{values.price || '0'}</p>
                 </div>
               </div>
               <div className="pt-2 border-t">
@@ -166,7 +202,7 @@ const AddToPortfolioDialog = ({
               </Button>
               <Button
                 type="submit"
-                disabled={loading || !quantity || !price}
+                disabled={loading || !values.quantity || !values.price}
                 className="min-w-[100px]"
               >
                 {loading ? 'Adding...' : 'Add to Portfolio'}

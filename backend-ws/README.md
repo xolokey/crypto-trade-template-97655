@@ -27,10 +27,41 @@ UPDATE_INTERVAL=2000
 
 ## Testing
 
+### Basic Connection Test
+
 ```bash
 # Test WebSocket connection
 node test-client.js
 ```
+
+### Load Testing
+
+Comprehensive load testing to verify performance requirements:
+
+```bash
+# Check if environment is ready for testing
+npm run check-env
+
+# Run standard load test (100 clients, 60 seconds)
+npm run load-test
+
+# Quick test (50 clients, 30 seconds)
+npm run load-test:quick
+
+# Stress test (200 clients, 60 seconds)
+npm run load-test:stress
+
+# Endurance test (100 clients, 5 minutes)
+npm run load-test:endurance
+```
+
+**Requirements Verified:**
+- ✅ Message delivery rate > 99%
+- ✅ P95 latency < 500ms
+- ✅ 100 concurrent connections
+- ✅ Memory stability
+
+See [LOAD_TESTING.md](./LOAD_TESTING.md) for detailed documentation.
 
 ## Deployment
 

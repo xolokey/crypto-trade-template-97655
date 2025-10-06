@@ -1,9 +1,19 @@
 // Unified Market Data Service
 // Uses backend API proxies to avoid CORS issues
+import { fetchJsonWithRetry, fetchWithRetryHttp } from '@/utils/fetchWithRetry';
 
 // Use environment variable or default to backend
 const API_BASE = import.meta.env.VITE_API_BASE_URL || 
   (import.meta.env.PROD ? '' : 'http://localhost:5000'); // .NET backend default
+
+// Retry configuration for API calls
+const RETRY_OPTIONS = {
+  maxRetries: 3,
+  initialDelay: 1000,
+  onRetry: (attempt: number, error: Error) => {
+    console.log(`Retrying API call (attempt ${attempt}):`, error.message);
+  }
+};
 
 export interface MarketDataResponse {
   success: boolean;
@@ -43,19 +53,16 @@ class MarketDataService {
         return cached;
       }
 
-      // Call backend API (Vercel or .NET)
-      const response = await fetch(`${API_BASE}/api/market-data/quote/${symbol}`, {
-        headers: {
-          'Content-Type': 'application/json',
+      // Call backend API with retry logic
+      const result: MarketDataResponse = await fetchJsonWithRetry(
+        `${API_BASE}/api/market-data/quote/${symbol}`,
+        {
+          headers: {
+            'Content-Type': 'application/json',
+          },
         },
-      });
-      
-      if (!response.ok) {
-        console.warn(`API returned ${response.status} for ${symbol}`);
-        throw new Error(`API returned ${response.status}`);
-      }
-
-      const result: MarketDataResponse = await response.json();
+        RETRY_OPTIONS
+      );
       
       if (result.success && result.data) {
         this.setCache(symbol, result.data);
@@ -78,18 +85,15 @@ class MarketDataService {
   async getMultipleQuotes(symbols: string[]): Promise<StockQuote[]> {
     try {
       const symbolsParam = symbols.join(',');
-      const response = await fetch(`${API_BASE}/api/market-data/quotes?symbols=${symbolsParam}`, {
-        headers: {
-          'Content-Type': 'application/json',
+      const result: MarketDataResponse = await fetchJsonWithRetry(
+        `${API_BASE}/api/market-data/quotes?symbols=${symbolsParam}`,
+        {
+          headers: {
+            'Content-Type': 'application/json',
+          },
         },
-      });
-      
-      if (!response.ok) {
-        console.warn(`API returned ${response.status} for multiple quotes`);
-        throw new Error(`API returned ${response.status}`);
-      }
-
-      const result: MarketDataResponse = await response.json();
+        RETRY_OPTIONS
+      );
       
       if (result.success && Array.isArray(result.data)) {
         // Cache each result

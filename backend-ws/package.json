@@ -5,7 +5,15 @@
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
-    "dev": "nodemon server.js"
+    "dev": "nodemon server.js",
+    "check-env": "node check-test-env.js",
+    "load-test": "node check-test-env.js && node load-test.js",
+    "load-test:stress": "node check-test-env.js && NUM_CLIENTS=200 node load-test.js",
+    "load-test:endurance": "node check-test-env.js && TEST_DURATION_MS=300000 node load-test.js",
+    "load-test:quick": "node check-test-env.js && NUM_CLIENTS=50 TEST_DURATION_MS=30000 node load-test.js",
+    "latency-test": "node check-test-env.js && node latency-test.js",
+    "latency-test:ideal": "node check-test-env.js && TEST_CONDITIONS=ideal node latency-test.js",
+    "latency-test:all": "node check-test-env.js && TEST_CONDITIONS=ideal,good,moderate,poor,bad node latency-test.js"
   },
   "dependencies": {
     "ws": "^8.16.0",

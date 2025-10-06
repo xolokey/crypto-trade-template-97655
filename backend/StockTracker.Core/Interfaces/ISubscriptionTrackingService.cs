@@ -33,7 +33,8 @@ public interface ISubscriptionTrackingService
     /// <summary>
     /// Decrement subscription count for a symbol
     /// </summary>
-    Task DecrementSubscriptionCountAsync(string symbol);
+    /// <returns>The new subscription count after decrement</returns>
+    Task<int> DecrementSubscriptionCountAsync(string symbol);
 
     /// <summary>
     /// Get subscription count for a symbol

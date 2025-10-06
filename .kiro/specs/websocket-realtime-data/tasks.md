@@ -23,7 +23,7 @@
   - Register service in Program.cs dependency injection
   - _Requirements: 4.1, 4.2, 6.1_
 
-- [ ] 2.3 Write unit tests for WebSocketNotificationService
+- [x] 2.3 Write unit tests for WebSocketNotificationService
 
   - Test successful message publishing
   - Test error handling when Redis is unavailable
@@ -45,7 +45,7 @@
   - Add methods to add/remove symbols from subscription set
   - _Requirements: 3.1, 3.2, 4.3_
 
-- [ ] 3.3 Write integration tests for MarketDataService updates
+- [x] 3.3 Write integration tests for MarketDataService updates
 
   - Test that updates are published after fetching data
   - Test that updates are only published for subscribed symbols
@@ -76,7 +76,7 @@
   - Implement circuit breaker for external API failures
   - _Requirements: 6.1, 6.2_
 
-- [ ]\* 4.4 Write tests for background service
+- [x] 4.4 Write tests for background service
 
   - Test that service fetches active symbols
   - Test that service publishes updates
@@ -151,7 +151,7 @@
   - Add throttling for rapid updates to same symbol
   - _Requirements: 2.5, 5.3_
 
-- [ ] 6.5 Write unit tests for WebSocketService
+- [x] 6.5 Write unit tests for WebSocketService
 
   - Test connection lifecycle
   - Test reconnection logic with exponential backoff
@@ -191,7 +191,7 @@
   - Log warnings when latency exceeds 1 second
   - _Requirements: 2.1, 5.1, 8.5_
 
-- [ ] 7.5 Write tests for useRealTimeStock hook
+- [x] 7.5 Write tests for useRealTimeStock hook
 
   - Test automatic subscription on mount
   - Test unsubscription on unmount
@@ -403,7 +403,7 @@
   - Reduce update frequency for non-critical symbols
   - _Requirements: 5.3_
 
-- [ ] 15.4 Perform load testing
+- [x] 15.4 Perform load testing
 
   - Simulate 100 concurrent connections
   - Measure message delivery latency
@@ -411,7 +411,7 @@
   - Measure memory usage over time
   - _Requirements: 5.1, 5.2_
 
-- [ ] 15.5 Perform latency testing
+- [x] 15.5 Perform latency testing
 
   - Measure end-to-end latency (backend → frontend)
   - Verify latency < 500ms

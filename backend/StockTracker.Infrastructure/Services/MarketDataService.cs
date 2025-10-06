@@ -159,7 +159,7 @@ public class MarketDataService : IMarketDataService
                 Low = niftyQuote.Low,
                 Open = niftyQuote.Open,
                 PreviousClose = niftyQuote.PreviousClose,
-                LastUpdate = niftyQuote.Timestamp
+                LastUpdate = niftyQuote.Timestamp ?? DateTime.UtcNow
             });
         }
 
@@ -177,7 +177,7 @@ public class MarketDataService : IMarketDataService
                 Low = sensexQuote.Low,
                 Open = sensexQuote.Open,
                 PreviousClose = sensexQuote.PreviousClose,
-                LastUpdate = sensexQuote.Timestamp
+                LastUpdate = sensexQuote.Timestamp ?? DateTime.UtcNow
             });
         }
 
@@ -195,7 +195,7 @@ public class MarketDataService : IMarketDataService
                 Low = bankNiftyQuote.Low,
                 Open = bankNiftyQuote.Open,
                 PreviousClose = bankNiftyQuote.PreviousClose,
-                LastUpdate = bankNiftyQuote.Timestamp
+                LastUpdate = bankNiftyQuote.Timestamp ?? DateTime.UtcNow
             });
         }
 
