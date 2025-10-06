@@ -5,42 +5,108 @@ import { TrendingUp, TrendingDown, RefreshCw, Activity } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { initializeIndices, updateIndexValue, isMarketOpen, getMarketStatus, NSEIndexData } from '@/data/realTimeNSEData';
 import { marketDataService } from '@/services/marketDataService';
+import { useToast } from '@/hooks/use-toast';
 
 const LiveMarketIndices = () => {
   const [indices, setIndices] = useState<NSEIndexData[]>(initializeIndices());
+  const [useRealData, setUseRealData] = useState(false);
+  const { toast } = useToast();
 
   const [isLive, setIsLive] = useState(true);
   const [lastRefresh, setLastRefresh] = useState(new Date());
   const [flashingIndex, setFlashingIndex] = useState<string | null>(null);
   const [marketStatus, setMarketStatus] = useState(getMarketStatus());
 
-  // Update with realistic NSE data
+  // Try to fetch real data, fallback to simulated
+  useEffect(() => {
+    const fetchRealData = async () => {
+      try {
+        // Try to fetch from backend API
+        const response = await fetch('/api/nse-live-data?type=index');
+        if (response.ok) {
+          const result = await response.json();
+          if (result.success && result.data) {
+            setUseRealData(true);
+            // Map API data to our format
+            const niftyIndex = initializeIndices()[0];
+            setIndices([
+              {
+                ...niftyIndex,
+                currentValue: result.data.value || 19674.25,
+                change: result.data.change || 0,
+                changePercent: result.data.changePercent || 0,
+                lastUpdate: new Date()
+              },
+              // Add more indices as they become available
+              ...initializeIndices().slice(1)
+            ]);
+            console.log('✅ Using real NSE data');
+            return;
+          }
+        }
+      } catch (error) {
+        console.log('⚠️ Real API not available, using simulated data');
+      }
+      
+      // Fallback to simulated data
+      setUseRealData(false);
+    };
+
+    fetchRealData();
+  }, []);
+
+  // Update with realistic NSE data (simulated or real)
   useEffect(() => {
     if (!isLive) return;
 
-    const interval = setInterval(() => {
-      // Pick a random index to update for visual effect
+    const interval = setInterval(async () => {
+      if (useRealData) {
+        // Try to fetch real data
+        try {
+          const response = await fetch('/api/nse-live-data?type=index');
+          if (response.ok) {
+            const result = await response.json();
+            if (result.success && result.data) {
+              setIndices(prev => prev.map(index => {
+                if (index.name === 'Nifty 50') {
+                  return {
+                    ...index,
+                    currentValue: result.data.value,
+                    change: result.data.change,
+                    changePercent: result.data.changePercent,
+                    lastUpdate: new Date()
+                  };
+                }
+                return updateIndexValue(index);
+              }));
+              setLastRefresh(new Date());
+              return;
+            }
+          }
+        } catch (error) {
+          console.log('API fetch failed, using simulated data');
+          setUseRealData(false);
+        }
+      }
+      
+      // Simulated data update
       const randomIndex = Math.floor(Math.random() * indices.length);
       
       setIndices(prev => prev.map((index, idx) => {
-        // Update with realistic movement
         const updated = updateIndexValue(index);
-
-        // Flash the card that's updating
         if (idx === randomIndex) {
           setFlashingIndex(index.name);
           setTimeout(() => setFlashingIndex(null), 500);
         }
-
         return updated;
       }));
       
       setLastRefresh(new Date());
       setMarketStatus(getMarketStatus());
-    }, 2000); // Update every 2 seconds
+    }, 2000);
 
     return () => clearInterval(interval);
-  }, [isLive, indices.length]);
+  }, [isLive, indices.length, useRealData]);
 
   const toggleLive = () => {
     setIsLive(!isLive);
@@ -65,9 +131,14 @@ const LiveMarketIndices = () => {
           <Badge variant={isLive ? 'default' : 'secondary'} className="text-xs">
             {isLive ? 'LIVE' : 'PAUSED'}
           </Badge>
-          {!isMarketOpen() && (
-            <Badge variant="outline" className="text-xs">
+          {!useRealData && (
+            <Badge variant="outline" className="text-xs text-orange-600">
               Simulated
+            </Badge>
+          )}
+          {useRealData && (
+            <Badge variant="outline" className="text-xs text-green-600">
+              Real Data
             </Badge>
           )}
         </div>

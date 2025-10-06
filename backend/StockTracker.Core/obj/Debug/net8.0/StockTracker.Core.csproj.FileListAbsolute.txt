@@ -1,0 +1,12 @@
+/Volumes/Catalina - Data/Lokey&Co./crypto-trade-template-97655/backend/StockTracker.Core/bin/Debug/net8.0/StockTracker.Core.deps.json
+/Volumes/Catalina - Data/Lokey&Co./crypto-trade-template-97655/backend/StockTracker.Core/bin/Debug/net8.0/StockTracker.Core.dll
+/Volumes/Catalina - Data/Lokey&Co./crypto-trade-template-97655/backend/StockTracker.Core/bin/Debug/net8.0/StockTracker.Core.pdb
+/Volumes/Catalina - Data/Lokey&Co./crypto-trade-template-97655/backend/StockTracker.Core/obj/Debug/net8.0/StockTracker.Core.GeneratedMSBuildEditorConfig.editorconfig
+/Volumes/Catalina - Data/Lokey&Co./crypto-trade-template-97655/backend/StockTracker.Core/obj/Debug/net8.0/StockTracker.Core.AssemblyInfoInputs.cache
+/Volumes/Catalina - Data/Lokey&Co./crypto-trade-template-97655/backend/StockTracker.Core/obj/Debug/net8.0/StockTracker.Core.AssemblyInfo.cs
+/Volumes/Catalina - Data/Lokey&Co./crypto-trade-template-97655/backend/StockTracker.Core/obj/Debug/net8.0/StockTracker.Core.csproj.CoreCompileInputs.cache
+/Volumes/Catalina - Data/Lokey&Co./crypto-trade-template-97655/backend/StockTracker.Core/obj/Debug/net8.0/StockTracker.Core.sourcelink.json
+/Volumes/Catalina - Data/Lokey&Co./crypto-trade-template-97655/backend/StockTracker.Core/obj/Debug/net8.0/StockTracker.Core.dll
+/Volumes/Catalina - Data/Lokey&Co./crypto-trade-template-97655/backend/StockTracker.Core/obj/Debug/net8.0/refint/StockTracker.Core.dll
+/Volumes/Catalina - Data/Lokey&Co./crypto-trade-template-97655/backend/StockTracker.Core/obj/Debug/net8.0/StockTracker.Core.pdb
+/Volumes/Catalina - Data/Lokey&Co./crypto-trade-template-97655/backend/StockTracker.Core/obj/Debug/net8.0/ref/StockTracker.Core.dll

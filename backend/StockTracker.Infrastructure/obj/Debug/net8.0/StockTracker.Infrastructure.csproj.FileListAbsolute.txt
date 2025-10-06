@@ -1,0 +1,16 @@
+/Volumes/Catalina - Data/Lokey&Co./crypto-trade-template-97655/backend/StockTracker.Infrastructure/bin/Debug/net8.0/StockTracker.Infrastructure.deps.json
+/Volumes/Catalina - Data/Lokey&Co./crypto-trade-template-97655/backend/StockTracker.Infrastructure/bin/Debug/net8.0/StockTracker.Infrastructure.dll
+/Volumes/Catalina - Data/Lokey&Co./crypto-trade-template-97655/backend/StockTracker.Infrastructure/bin/Debug/net8.0/StockTracker.Infrastructure.pdb
+/Volumes/Catalina - Data/Lokey&Co./crypto-trade-template-97655/backend/StockTracker.Infrastructure/bin/Debug/net8.0/StockTracker.Core.dll
+/Volumes/Catalina - Data/Lokey&Co./crypto-trade-template-97655/backend/StockTracker.Infrastructure/bin/Debug/net8.0/StockTracker.Core.pdb
+/Volumes/Catalina - Data/Lokey&Co./crypto-trade-template-97655/backend/StockTracker.Infrastructure/obj/Debug/net8.0/StockTracker.Infrastructure.csproj.AssemblyReference.cache
+/Volumes/Catalina - Data/Lokey&Co./crypto-trade-template-97655/backend/StockTracker.Infrastructure/obj/Debug/net8.0/StockTracker.Infrastructure.GeneratedMSBuildEditorConfig.editorconfig
+/Volumes/Catalina - Data/Lokey&Co./crypto-trade-template-97655/backend/StockTracker.Infrastructure/obj/Debug/net8.0/StockTracker.Infrastructure.AssemblyInfoInputs.cache
+/Volumes/Catalina - Data/Lokey&Co./crypto-trade-template-97655/backend/StockTracker.Infrastructure/obj/Debug/net8.0/StockTracker.Infrastructure.AssemblyInfo.cs
+/Volumes/Catalina - Data/Lokey&Co./crypto-trade-template-97655/backend/StockTracker.Infrastructure/obj/Debug/net8.0/StockTracker.Infrastructure.csproj.CoreCompileInputs.cache
+/Volumes/Catalina - Data/Lokey&Co./crypto-trade-template-97655/backend/StockTracker.Infrastructure/obj/Debug/net8.0/StockTracker.Infrastructure.sourcelink.json
+/Volumes/Catalina - Data/Lokey&Co./crypto-trade-template-97655/backend/StockTracker.Infrastructure/obj/Debug/net8.0/StockTra.13192E9C.Up2Date
+/Volumes/Catalina - Data/Lokey&Co./crypto-trade-template-97655/backend/StockTracker.Infrastructure/obj/Debug/net8.0/StockTracker.Infrastructure.dll
+/Volumes/Catalina - Data/Lokey&Co./crypto-trade-template-97655/backend/StockTracker.Infrastructure/obj/Debug/net8.0/refint/StockTracker.Infrastructure.dll
+/Volumes/Catalina - Data/Lokey&Co./crypto-trade-template-97655/backend/StockTracker.Infrastructure/obj/Debug/net8.0/StockTracker.Infrastructure.pdb
+/Volumes/Catalina - Data/Lokey&Co./crypto-trade-template-97655/backend/StockTracker.Infrastructure/obj/Debug/net8.0/ref/StockTracker.Infrastructure.dll

@@ -1,8 +1,5 @@
-using Microsoft.EntityFrameworkCore;
 using Serilog;
-using StockTracker.API.Middleware;
 using StockTracker.Core.Interfaces;
-using StockTracker.Infrastructure.Database;
 using StockTracker.Infrastructure.Services;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -22,9 +19,9 @@ builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
-// Database
-builder.Services.AddDbContext<StockTrackerDbContext>(options =>
-    options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
+// Database - commented out for now, add when needed
+// builder.Services.AddDbContext<StockTrackerDbContext>(options =>
+//     options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
 
 // CORS
 builder.Services.AddCors(options =>
@@ -49,45 +46,21 @@ builder.Services.AddStackExchangeRedisCache(options =>
     options.InstanceName = "StockTracker_";
 });
 
-// HTTP Clients with Polly
-builder.Services.AddHttpClient<IAlphaVantageService, AlphaVantageService>()
-    .AddTransientHttpErrorPolicy(policy => 
-        policy.WaitAndRetryAsync(3, retryAttempt => TimeSpan.FromSeconds(Math.Pow(2, retryAttempt))));
-
-builder.Services.AddHttpClient<ITwelveDataService, TwelveDataService>()
-    .AddTransientHttpErrorPolicy(policy => 
-        policy.WaitAndRetryAsync(3, retryAttempt => TimeSpan.FromSeconds(Math.Pow(2, retryAttempt))));
-
-builder.Services.AddHttpClient<INSEService, NSEService>()
-    .AddTransientHttpErrorPolicy(policy => 
-        policy.WaitAndRetryAsync(3, retryAttempt => TimeSpan.FromSeconds(Math.Pow(2, retryAttempt))));
+// HTTP Clients
+builder.Services.AddHttpClient<IAlphaVantageService, AlphaVantageService>();
+builder.Services.AddHttpClient<ITwelveDataService, TwelveDataService>();
+builder.Services.AddHttpClient<INSEService, NSEService>();
 
 // Services
 builder.Services.AddScoped<IMarketDataService, MarketDataService>();
-builder.Services.AddScoped<IPriceAlertService, PriceAlertService>();
-builder.Services.AddScoped<IPortfolioService, PortfolioService>();
-builder.Services.AddScoped<IWatchlistService, WatchlistService>();
 builder.Services.AddSingleton<ICacheService, CacheService>();
+// Add these when implemented:
+// builder.Services.AddScoped<IPriceAlertService, PriceAlertService>();
+// builder.Services.AddScoped<IPortfolioService, PortfolioService>();
+// builder.Services.AddScoped<IWatchlistService, WatchlistService>();
 
-// Health Checks
-builder.Services.AddHealthChecks()
-    .AddNpgSql(builder.Configuration.GetConnectionString("DefaultConnection")!)
-    .AddRedis(builder.Configuration.GetConnectionString("Redis") ?? "localhost:6379");
-
-// Rate Limiting
-builder.Services.AddRateLimiter(options =>
-{
-    options.GlobalLimiter = PartitionedRateLimiter.Create<HttpContext, string>(context =>
-        RateLimitPartition.GetFixedWindowLimiter(
-            partitionKey: context.User.Identity?.Name ?? context.Request.Headers.Host.ToString(),
-            factory: partition => new FixedWindowRateLimiterOptions
-            {
-                AutoReplenishment = true,
-                PermitLimit = 100,
-                QueueLimit = 0,
-                Window = TimeSpan.FromMinutes(1)
-            }));
-});
+// Health Checks - simplified
+builder.Services.AddHealthChecks();
 
 var app = builder.Build();
 
@@ -100,16 +73,10 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 
-// Custom middleware
-app.UseMiddleware<ErrorHandlingMiddleware>();
-app.UseMiddleware<RequestLoggingMiddleware>();
-
 app.UseCors("AllowFrontend");
 
-app.UseRateLimiter();
-
-app.UseAuthentication();
-app.UseAuthorization();
+// app.UseAuthentication();
+// app.UseAuthorization();
 
 app.MapControllers();
 app.MapHealthChecks("/health");

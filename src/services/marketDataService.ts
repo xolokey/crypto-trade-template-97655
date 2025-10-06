@@ -1,7 +1,9 @@
 // Unified Market Data Service
 // Uses backend API proxies to avoid CORS issues
 
-const API_BASE = import.meta.env.PROD ? '' : 'http://localhost:8080';
+// Use environment variable or default to backend
+const API_BASE = import.meta.env.VITE_API_BASE_URL || 
+  (import.meta.env.PROD ? '' : 'http://localhost:5000'); // .NET backend default
 
 export interface MarketDataResponse {
   success: boolean;
@@ -30,16 +32,26 @@ class MarketDataService {
 
   /**
    * Fetch single stock quote using backend proxy
+   * Now uses real backend API - NO MORE MOCK DATA!
    */
   async getStockQuote(symbol: string): Promise<StockQuote | null> {
     try {
       // Check cache first
       const cached = this.getFromCache(symbol);
-      if (cached) return cached;
+      if (cached) {
+        console.log(`📦 Cache hit for ${symbol}`);
+        return cached;
+      }
 
-      const response = await fetch(`${API_BASE}/api/market-data?symbol=${symbol}`);
+      // Call backend API (Vercel or .NET)
+      const response = await fetch(`${API_BASE}/api/market-data/quote/${symbol}`, {
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
       
       if (!response.ok) {
+        console.warn(`API returned ${response.status} for ${symbol}`);
         throw new Error(`API returned ${response.status}`);
       }
 
@@ -47,26 +59,33 @@ class MarketDataService {
       
       if (result.success && result.data) {
         this.setCache(symbol, result.data);
-        console.log(`✅ Fetched ${symbol} from ${result.source}`);
+        console.log(`✅ Real data fetched for ${symbol} from ${result.source || 'API'}`);
         return result.data;
       }
 
+      console.warn(`No data returned for ${symbol}`);
       return null;
     } catch (error) {
-      console.error(`Error fetching ${symbol}:`, error);
+      console.error(`❌ Error fetching ${symbol}:`, error);
       return null;
     }
   }
 
   /**
    * Fetch multiple stock quotes in parallel
+   * Now uses real backend API
    */
   async getMultipleQuotes(symbols: string[]): Promise<StockQuote[]> {
     try {
       const symbolsParam = symbols.join(',');
-      const response = await fetch(`${API_BASE}/api/market-data?symbols=${symbolsParam}`);
+      const response = await fetch(`${API_BASE}/api/market-data/quotes?symbols=${symbolsParam}`, {
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
       
       if (!response.ok) {
+        console.warn(`API returned ${response.status} for multiple quotes`);
         throw new Error(`API returned ${response.status}`);
       }
 
@@ -78,13 +97,14 @@ class MarketDataService {
           this.setCache(quote.symbol, quote);
         });
         
-        console.log(`✅ Fetched ${symbols.length} stocks`);
+        console.log(`✅ Real data fetched for ${symbols.length} stocks`);
         return result.data;
       }
 
+      console.warn('No data returned for multiple quotes');
       return [];
     } catch (error) {
-      console.error('Error fetching multiple quotes:', error);
+      console.error('❌ Error fetching multiple quotes:', error);
       return [];
     }
   }

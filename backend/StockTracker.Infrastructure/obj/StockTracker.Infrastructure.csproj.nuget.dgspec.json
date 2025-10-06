@@ -1,0 +1,164 @@
+{
+  "format": 1,
+  "restore": {
+    "/Volumes/Catalina - Data/Lokey&Co./crypto-trade-template-97655/backend/StockTracker.Infrastructure/StockTracker.Infrastructure.csproj": {}
+  },
+  "projects": {
+    "/Volumes/Catalina - Data/Lokey&Co./crypto-trade-template-97655/backend/StockTracker.Core/StockTracker.Core.csproj": {
+      "version": "1.0.0",
+      "restore": {
+        "projectUniqueName": "/Volumes/Catalina - Data/Lokey&Co./crypto-trade-template-97655/backend/StockTracker.Core/StockTracker.Core.csproj",
+        "projectName": "StockTracker.Core",
+        "projectPath": "/Volumes/Catalina - Data/Lokey&Co./crypto-trade-template-97655/backend/StockTracker.Core/StockTracker.Core.csproj",
+        "packagesPath": "/Users/apple/.nuget/packages/",
+        "outputPath": "/Volumes/Catalina - Data/Lokey&Co./crypto-trade-template-97655/backend/StockTracker.Core/obj/",
+        "projectStyle": "PackageReference",
+        "configFilePaths": [
+          "/Users/apple/.nuget/NuGet/NuGet.Config"
+        ],
+        "originalTargetFrameworks": [
+          "net8.0"
+        ],
+        "sources": {
+          "https://api.nuget.org/v3/index.json": {}
+        },
+        "frameworks": {
+          "net8.0": {
+            "targetAlias": "net8.0",
+            "projectReferences": {}
+          }
+        },
+        "warningProperties": {
+          "warnAsError": [
+            "NU1605"
+          ]
+        },
+        "restoreAuditProperties": {
+          "enableAudit": "true",
+          "auditLevel": "low",
+          "auditMode": "direct"
+        },
+        "SdkAnalysisLevel": "9.0.300"
+      },
+      "frameworks": {
+        "net8.0": {
+          "targetAlias": "net8.0",
+          "imports": [
+            "net461",
+            "net462",
+            "net47",
+            "net471",
+            "net472",
+            "net48",
+            "net481"
+          ],
+          "assetTargetFallback": true,
+          "warn": true,
+          "downloadDependencies": [
+            {
+              "name": "Microsoft.AspNetCore.App.Ref",
+              "version": "[8.0.19, 8.0.19]"
+            },
+            {
+              "name": "Microsoft.NETCore.App.Ref",
+              "version": "[8.0.19, 8.0.19]"
+            }
+          ],
+          "frameworkReferences": {
+            "Microsoft.NETCore.App": {
+              "privateAssets": "all"
+            }
+          },
+          "runtimeIdentifierGraphPath": "/usr/local/share/dotnet/sdk/9.0.304/PortableRuntimeIdentifierGraph.json"
+        }
+      }
+    },
+    "/Volumes/Catalina - Data/Lokey&Co./crypto-trade-template-97655/backend/StockTracker.Infrastructure/StockTracker.Infrastructure.csproj": {
+      "version": "1.0.0",
+      "restore": {
+        "projectUniqueName": "/Volumes/Catalina - Data/Lokey&Co./crypto-trade-template-97655/backend/StockTracker.Infrastructure/StockTracker.Infrastructure.csproj",
+        "projectName": "StockTracker.Infrastructure",
+        "projectPath": "/Volumes/Catalina - Data/Lokey&Co./crypto-trade-template-97655/backend/StockTracker.Infrastructure/StockTracker.Infrastructure.csproj",
+        "packagesPath": "/Users/apple/.nuget/packages/",
+        "outputPath": "/Volumes/Catalina - Data/Lokey&Co./crypto-trade-template-97655/backend/StockTracker.Infrastructure/obj/",
+        "projectStyle": "PackageReference",
+        "configFilePaths": [
+          "/Users/apple/.nuget/NuGet/NuGet.Config"
+        ],
+        "originalTargetFrameworks": [
+          "net8.0"
+        ],
+        "sources": {
+          "https://api.nuget.org/v3/index.json": {}
+        },
+        "frameworks": {
+          "net8.0": {
+            "targetAlias": "net8.0",
+            "projectReferences": {
+              "/Volumes/Catalina - Data/Lokey&Co./crypto-trade-template-97655/backend/StockTracker.Core/StockTracker.Core.csproj": {
+                "projectPath": "/Volumes/Catalina - Data/Lokey&Co./crypto-trade-template-97655/backend/StockTracker.Core/StockTracker.Core.csproj"
+              }
+            }
+          }
+        },
+        "warningProperties": {
+          "warnAsError": [
+            "NU1605"
+          ]
+        },
+        "restoreAuditProperties": {
+          "enableAudit": "true",
+          "auditLevel": "low",
+          "auditMode": "direct"
+        },
+        "SdkAnalysisLevel": "9.0.300"
+      },
+      "frameworks": {
+        "net8.0": {
+          "targetAlias": "net8.0",
+          "dependencies": {
+            "Microsoft.Extensions.Caching.Abstractions": {
+              "target": "Package",
+              "version": "[8.0.0, )"
+            },
+            "Microsoft.Extensions.Http": {
+              "target": "Package",
+              "version": "[8.0.0, )"
+            },
+            "Newtonsoft.Json": {
+              "target": "Package",
+              "version": "[13.0.3, )"
+            }
+          },
+          "imports": [
+            "net461",
+            "net462",
+            "net47",
+            "net471",
+            "net472",
+            "net48",
+            "net481"
+          ],
+          "assetTargetFallback": true,
+          "warn": true,
+          "downloadDependencies": [
+            {
+              "name": "Microsoft.AspNetCore.App.Ref",
+              "version": "[8.0.19, 8.0.19]"
+            },
+            {
+              "name": "Microsoft.NETCore.App.Ref",
+              "version": "[8.0.19, 8.0.19]"
+            }
+          ],
+          "frameworkReferences": {
+            "Microsoft.NETCore.App": {
+              "privateAssets": "all"
+            }
+          },
+          "runtimeIdentifierGraphPath": "/usr/local/share/dotnet/sdk/9.0.304/PortableRuntimeIdentifierGraph.json"
+        }
+      }
+    }
+  }
+}
