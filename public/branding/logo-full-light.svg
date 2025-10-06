@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 320" fill="none">
+  <!-- Shield -->
+  <path d="M100 10 L160 40 L160 110 Q160 150 100 170 Q40 150 40 110 L40 40 Z" 
+        stroke="black" stroke-width="3" fill="white"/>
+  
+  <!-- LE monogram -->
+  <text x="100" y="105" font-family="serif" font-size="60" font-weight="bold" 
+        text-anchor="middle" fill="black">LE</text>
+  
+  <!-- Keyhole -->
+  <circle cx="100" cy="135" r="5" fill="black"/>
+  <rect x="97.5" y="135" width="5" height="12" fill="black"/>
+  
+  <!-- LOKEY & CO text -->
+  <text x="200" y="120" font-family="serif" font-size="48" font-weight="bold" 
+        text-anchor="middle" fill="black">LOKEY</text>
+  <text x="200" y="160" font-family="serif" font-size="48" font-weight="bold" 
+        text-anchor="middle" fill="black">&amp;CO</text>
+  
+  <!-- HOMESTEAD text -->
+  <text x="200" y="195" font-family="serif" font-size="20" font-weight="normal" 
+        text-anchor="middle" fill="black" letter-spacing="3">HOMESTEAD</text>
+</svg>

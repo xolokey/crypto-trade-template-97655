@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 240" fill="none">
+  <!-- Shield outline -->
+  <path d="M100 10 L180 50 L180 140 Q180 200 100 230 Q20 200 20 140 L20 50 Z" 
+        stroke="white" stroke-width="4" fill="black"/>
+  
+  <!-- LE monogram -->
+  <text x="100" y="140" font-family="serif" font-size="90" font-weight="bold" 
+        text-anchor="middle" fill="white">LE</text>
+  
+  <!-- Keyhole -->
+  <circle cx="100" cy="180" r="8" fill="white"/>
+  <rect x="96" y="180" width="8" height="20" fill="white"/>
+</svg>
