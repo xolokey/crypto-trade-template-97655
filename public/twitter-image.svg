@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 600" fill="none">
+  <!-- Background -->
+  <rect width="1200" height="600" fill="#0A0A0A"/>
+  
+  <!-- Shield -->
+  <path d="M300 120 L420 170 L420 320 Q420 380 300 410 Q180 380 180 320 L180 170 Z" 
+        stroke="white" stroke-width="4" fill="#0A0A0A"/>
+  
+  <!-- LE monogram -->
+  <text x="300" y="300" font-family="serif" font-size="90" font-weight="bold" 
+        text-anchor="middle" fill="white">LE</text>
+  
+  <!-- Keyhole -->
+  <circle cx="300" cy="340" r="8" fill="white"/>
+  <rect x="296" y="340" width="8" height="20" fill="white"/>
+  
+  <!-- Company name -->
+  <text x="650" y="260" font-family="serif" font-size="68" font-weight="bold" 
+        text-anchor="middle" fill="white">LOKEY &amp; CO</text>
+  <text x="650" y="320" font-family="serif" font-size="32" font-weight="normal" 
+        text-anchor="middle" fill="#888" letter-spacing="4">HOMESTEAD</text>
+  
+  <!-- Tagline -->
+  <text x="650" y="390" font-family="sans-serif" font-size="26" font-weight="normal" 
+        text-anchor="middle" fill="#22c55e">Indian Stock Market Tracker</text>
+</svg>

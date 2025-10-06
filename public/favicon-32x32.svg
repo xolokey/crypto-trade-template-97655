@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" fill="none">
+  <path d="M16 2 L28 8 L28 20 Q28 26 16 30 Q4 26 4 20 L4 8 Z" 
+        stroke="black" stroke-width="1" fill="white"/>
+  <text x="16" y="20" font-family="serif" font-size="14" font-weight="bold" 
+        text-anchor="middle" fill="black">LE</text>
+  <circle cx="16" cy="24" r="2" fill="black"/>
+  <rect x="15" y="24" width="2" height="4" fill="black"/>
+</svg>

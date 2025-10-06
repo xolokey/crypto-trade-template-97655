@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="none">
+  <path d="M8 1 L14 4 L14 10 Q14 13 8 15 Q2 13 2 10 L2 4 Z" 
+        stroke="black" stroke-width="0.5" fill="white"/>
+  <text x="8" y="10" font-family="serif" font-size="7" font-weight="bold" 
+        text-anchor="middle" fill="black">LE</text>
+  <circle cx="8" cy="12" r="1" fill="black"/>
+</svg>

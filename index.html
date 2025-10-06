@@ -2,17 +2,21 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <link rel="icon" type="image/x-icon" href="/favicon.ico" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg?v=3" />
+    <link rel="shortcut icon" href="/favicon.svg?v=3" />
+    <link rel="icon" type="image/svg+xml" sizes="16x16" href="/favicon-16x16.svg" />
+    <link rel="icon" type="image/svg+xml" sizes="32x32" href="/favicon-32x32.svg" />
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     
     <!-- SEO Meta Tags -->
-    <title>Indian Stock Tracker - Real-time Nifty 50 & Sensex 30 Tracking</title>
+    <title>Lokey & Co Homestead - Indian Stock Tracker</title>
     <meta name="description" content="Track Indian stocks in real-time with advanced analytics. Monitor Nifty 50 and Sensex 30 stocks live with personalized watchlists and comprehensive market data." />
     <meta name="keywords" content="Indian stocks, Nifty 50, Sensex 30, stock tracking, real-time market data, stock analysis, investment tracking" />
-    <meta name="author" content="Indian Stock Tracker" />
+    <meta name="author" content="Lokey & Co Homestead" />
     
     <!-- Open Graph Meta Tags -->
-    <meta property="og:title" content="Indian Stock Tracker - Real-time Stock Monitoring" />
+    <meta property="og:title" content="Lokey & Co Homestead - Indian Stock Tracker" />
     <meta property="og:description" content="Track Indian stocks in real-time with advanced analytics and personalized watchlists." />
     <meta property="og:type" content="website" />
     <meta property="og:url" content="https://your-domain.vercel.app" />
@@ -20,16 +24,16 @@
     
     <!-- Twitter Card Meta Tags -->
     <meta name="twitter:card" content="summary_large_image" />
-    <meta name="twitter:title" content="Indian Stock Tracker" />
+    <meta name="twitter:title" content="Lokey & Co Homestead - Indian Stock Tracker" />
     <meta name="twitter:description" content="Track Indian stocks in real-time with advanced analytics." />
-    <meta name="twitter:image" content="/og-image.svg" />
+    <meta name="twitter:image" content="/twitter-image.svg" />
     
     <!-- PWA Meta Tags -->
     <meta name="theme-color" content="#000000" />
     <link rel="manifest" href="/manifest.json" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black" />
-    <meta name="apple-mobile-web-app-title" content="StockTracker" />
+    <meta name="apple-mobile-web-app-title" content="Lokey & Co" />
     
     <!-- Preconnect to external domains -->
     <link rel="preconnect" href="https://msesvmlvhrhdipfbhvub.supabase.co" />
@@ -38,6 +42,23 @@
 
   <body>
     <div id="root"></div>
+    <script>
+      // Force favicon update
+      function updateFavicon() {
+        const links = document.querySelectorAll("link[rel*='icon']");
+        links.forEach(link => link.remove());
+        
+        const newLink = document.createElement('link');
+        newLink.rel = 'icon';
+        newLink.type = 'image/svg+xml';
+        newLink.href = '/favicon.svg?v=' + Date.now();
+        document.head.appendChild(newLink);
+      }
+      
+      // Update favicon immediately and after page load
+      updateFavicon();
+      window.addEventListener('load', updateFavicon);
+    </script>
     <script src="https://cdn.gpteng.co/gptengineer.js" type="module"></script>
     <script type="module" src="/src/main.tsx"></script>
     

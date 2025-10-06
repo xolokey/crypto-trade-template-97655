@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" fill="none">
+  <!-- Background with padding for maskable -->
+  <rect width="512" height="512" fill="white" rx="50"/>
+  
+  <!-- Shield -->
+  <path d="M256 100 L380 150 L380 320 Q380 390 256 430 Q132 390 132 320 L132 150 Z" 
+        stroke="black" stroke-width="8" fill="white"/>
+  
+  <!-- LE monogram -->
+  <text x="256" y="300" font-family="serif" font-size="120" font-weight="bold" 
+        text-anchor="middle" fill="black">LE</text>
+  
+  <!-- Keyhole -->
+  <circle cx="256" cy="350" r="12" fill="black"/>
+  <rect x="250" y="350" width="12" height="30" fill="black"/>
+</svg>
