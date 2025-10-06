@@ -1,14 +1,40 @@
-// WebSocket Service for Real-Time Market Data
-// Provides low-latency updates for active trading
+// Enhanced WebSocket Service for Real-Time Market Data
+// Provides low-latency updates with exponential backoff reconnection
 
 type MessageHandler = (data: any) => void;
 type ErrorHandler = (error: Error) => void;
+type ConnectionHandler = (state: ConnectionState) => void;
+
+export type ConnectionState = 
+  | 'CONNECTING' 
+  | 'OPEN' 
+  | 'CLOSING' 
+  | 'CLOSED' 
+  | 'RECONNECTING';
 
 export interface WebSocketConfig {
   url: string;
-  reconnectInterval?: number;
+  reconnectInterval?: number; // Base interval for exponential backoff
   maxReconnectAttempts?: number;
   heartbeatInterval?: number;
+  messageQueueSize?: number;
+  enableAutoReconnect?: boolean;
+}
+
+export interface ConnectionMetrics {
+  connectionState: ConnectionState;
+  connectedAt: Date | null;
+  lastMessageAt: Date | null;
+  messageCount: number;
+  errorCount: number;
+  reconnectAttempts: number;
+  averageLatency: number;
+  activeSubscriptions: number;
+}
+
+interface QueuedMessage {
+  data: any;
+  timestamp: number;
 }
 
 export class WebSocketService {
@@ -16,17 +42,35 @@ export class WebSocketService {
   private config: WebSocketConfig;
   private messageHandlers: Set<MessageHandler> = new Set();
   private errorHandlers: Set<ErrorHandler> = new Set();
+  private connectionHandlers: Set<ConnectionHandler> = new Set();
+  
   private reconnectAttempts = 0;
   private reconnectTimer: NodeJS.Timeout | null = null;
   private heartbeatTimer: NodeJS.Timeout | null = null;
   private isIntentionallyClosed = false;
   private subscribedSymbols: Set<string> = new Set();
+  
+  // State tracking
+  private connectionState: ConnectionState = 'CLOSED';
+  private connectedAt: Date | null = null;
+  private lastMessageAt: Date | null = null;
+  private messageCount = 0;
+  private errorCount = 0;
+  private latencySum = 0;
+  private latencyCount = 0;
+  
+  // Message batching
+  private messageQueue: QueuedMessage[] = [];
+  private batchTimer: NodeJS.Timeout | null = null;
+  private readonly BATCH_INTERVAL = 100; // ms
 
   constructor(config: WebSocketConfig) {
     this.config = {
-      reconnectInterval: 5000,
+      reconnectInterval: 1000, // Start with 1 second
       maxReconnectAttempts: 10,
       heartbeatInterval: 30000,
+      messageQueueSize: 100,
+      enableAutoReconnect: true,
       ...config
     };
   }
@@ -41,6 +85,7 @@ export class WebSocketService {
     }
 
     this.isIntentionallyClosed = false;
+    this.setConnectionState('CONNECTING');
 
     try {
       console.log(`Connecting to WebSocket: ${this.config.url}`);
@@ -52,6 +97,7 @@ export class WebSocketService {
       this.ws.onclose = this.handleClose.bind(this);
     } catch (error) {
       console.error('WebSocket connection error:', error);
+      this.errorCount++;
       this.scheduleReconnect();
     }
   }
@@ -64,10 +110,12 @@ export class WebSocketService {
     this.clearTimers();
     
     if (this.ws) {
+      this.setConnectionState('CLOSING');
       this.ws.close();
       this.ws = null;
     }
 
+    this.setConnectionState('CLOSED');
     console.log('WebSocket disconnected');
   }
 
@@ -108,6 +156,13 @@ export class WebSocketService {
   }
 
   /**
+   * Get active subscriptions
+   */
+  getActiveSubscriptions(): Set<string> {
+    return new Set(this.subscribedSymbols);
+  }
+
+  /**
    * Send message to server
    */
   send(data: any): void {
@@ -120,6 +175,7 @@ export class WebSocketService {
       this.ws!.send(JSON.stringify(data));
     } catch (error) {
       console.error('Error sending WebSocket message:', error);
+      this.errorCount++;
     }
   }
 
@@ -129,7 +185,6 @@ export class WebSocketService {
   onMessage(handler: MessageHandler): () => void {
     this.messageHandlers.add(handler);
     
-    // Return unsubscribe function
     return () => {
       this.messageHandlers.delete(handler);
     };
@@ -141,9 +196,19 @@ export class WebSocketService {
   onError(handler: ErrorHandler): () => void {
     this.errorHandlers.add(handler);
     
-    // Return unsubscribe function
     return () => {
       this.errorHandlers.delete(handler);
+    };
+  }
+
+  /**
+   * Add connection state change handler
+   */
+  onConnectionChange(handler: ConnectionHandler): () => void {
+    this.connectionHandlers.add(handler);
+    
+    return () => {
+      this.connectionHandlers.delete(handler);
     };
   }
 
@@ -157,20 +222,55 @@ export class WebSocketService {
   /**
    * Get connection state
    */
-  getState(): string {
-    if (!this.ws) return 'CLOSED';
-    
-    switch (this.ws.readyState) {
-      case WebSocket.CONNECTING:
-        return 'CONNECTING';
-      case WebSocket.OPEN:
-        return 'OPEN';
-      case WebSocket.CLOSING:
-        return 'CLOSING';
-      case WebSocket.CLOSED:
-        return 'CLOSED';
-      default:
-        return 'UNKNOWN';
+  getConnectionState(): ConnectionState {
+    return this.connectionState;
+  }
+
+  /**
+   * Get connection metrics
+   */
+  getMetrics(): ConnectionMetrics {
+    return {
+      connectionState: this.connectionState,
+      connectedAt: this.connectedAt,
+      lastMessageAt: this.lastMessageAt,
+      messageCount: this.messageCount,
+      errorCount: this.errorCount,
+      reconnectAttempts: this.reconnectAttempts,
+      averageLatency: this.latencyCount > 0 ? this.latencySum / this.latencyCount : 0,
+      activeSubscriptions: this.subscribedSymbols.size
+    };
+  }
+
+  /**
+   * Get average latency
+   */
+  getLatency(): number {
+    return this.latencyCount > 0 ? this.latencySum / this.latencyCount : 0;
+  }
+
+  /**
+   * Get last message time
+   */
+  getLastMessageTime(): Date | null {
+    return this.lastMessageAt;
+  }
+
+  /**
+   * Set connection state and notify handlers
+   */
+  private setConnectionState(state: ConnectionState): void {
+    if (this.connectionState !== state) {
+      this.connectionState = state;
+      console.log(`WebSocket state changed: ${state}`);
+      
+      this.connectionHandlers.forEach(handler => {
+        try {
+          handler(state);
+        } catch (error) {
+          console.error('Error in connection handler:', error);
+        }
+      });
     }
   }
 
@@ -179,11 +279,14 @@ export class WebSocketService {
    */
   private handleOpen(): void {
     console.log('✅ WebSocket connected');
+    this.setConnectionState('OPEN');
+    this.connectedAt = new Date();
     this.reconnectAttempts = 0;
     this.startHeartbeat();
 
     // Resubscribe to symbols
     if (this.subscribedSymbols.size > 0) {
+      console.log(`Resubscribing to ${this.subscribedSymbols.size} symbols`);
       this.subscribe(Array.from(this.subscribedSymbols));
     }
   }
@@ -194,18 +297,75 @@ export class WebSocketService {
   private handleMessage(event: MessageEvent): void {
     try {
       const data = JSON.parse(event.data);
+      this.lastMessageAt = new Date();
+      this.messageCount++;
       
-      // Notify all handlers
+      // Calculate latency if timestamp is provided
+      if (data.timestamp) {
+        const latency = Date.now() - new Date(data.timestamp).getTime();
+        this.latencySum += latency;
+        this.latencyCount++;
+        
+        // Log warning if latency is high
+        if (latency > 1000) {
+          console.warn(`High latency detected: ${latency}ms`);
+        }
+      }
+      
+      // Add to message queue for batching
+      this.queueMessage(data);
+    } catch (error) {
+      console.error('Error parsing WebSocket message:', error);
+      this.errorCount++;
+    }
+  }
+
+  /**
+   * Queue message for batch processing
+   */
+  private queueMessage(data: any): void {
+    this.messageQueue.push({
+      data,
+      timestamp: Date.now()
+    });
+
+    // Limit queue size
+    if (this.messageQueue.length > this.config.messageQueueSize!) {
+      this.messageQueue.shift();
+    }
+
+    // Start batch timer if not already running
+    if (!this.batchTimer) {
+      this.batchTimer = setTimeout(() => {
+        this.processBatchedMessages();
+      }, this.BATCH_INTERVAL);
+    }
+  }
+
+  /**
+   * Process batched messages
+   */
+  private processBatchedMessages(): void {
+    if (this.messageQueue.length === 0) {
+      this.batchTimer = null;
+      return;
+    }
+
+    const messages = [...this.messageQueue];
+    this.messageQueue = [];
+    this.batchTimer = null;
+
+    // Notify all handlers
+    messages.forEach(({ data }) => {
       this.messageHandlers.forEach(handler => {
         try {
           handler(data);
         } catch (error) {
           console.error('Error in message handler:', error);
+          this.errorCount++;
         }
       });
-    } catch (error) {
-      console.error('Error parsing WebSocket message:', error);
-    }
+    });
   }
 
   /**
@@ -214,6 +374,7 @@ export class WebSocketService {
   private handleError(event: Event): void {
     const error = new Error('WebSocket error occurred');
     console.error('WebSocket error:', event);
+    this.errorCount++;
     
     this.errorHandlers.forEach(handler => {
       try {
@@ -229,26 +390,35 @@ export class WebSocketService {
    */
   private handleClose(event: CloseEvent): void {
     console.log(`WebSocket closed: ${event.code} - ${event.reason}`);
+    this.setConnectionState('CLOSED');
     this.clearTimers();
 
-    if (!this.isIntentionallyClosed) {
+    if (!this.isIntentionallyClosed && this.config.enableAutoReconnect) {
       this.scheduleReconnect();
     }
   }
 
   /**
-   * Schedule reconnection attempt
+   * Schedule reconnection attempt with exponential backoff
    */
   private scheduleReconnect(): void {
     if (this.reconnectAttempts >= this.config.maxReconnectAttempts!) {
       console.error('Max reconnection attempts reached');
+      this.setConnectionState('CLOSED');
       return;
     }
 
     this.reconnectAttempts++;
-    const delay = this.config.reconnectInterval! * this.reconnectAttempts;
+    this.setConnectionState('RECONNECTING');
 
-    console.log(`Reconnecting in ${delay}ms (attempt ${this.reconnectAttempts})`);
+    // Exponential backoff: 1s, 2s, 4s, 8s, 16s, 30s (max)
+    const baseDelay = this.config.reconnectInterval!;
+    const exponentialDelay = baseDelay * Math.pow(2, this.reconnectAttempts - 1);
+    const delay = Math.min(exponentialDelay, 30000); // Cap at 30 seconds
+
+    console.log(
+      `Reconnecting in ${delay}ms (attempt ${this.reconnectAttempts}/${this.config.maxReconnectAttempts})`
+    );
 
     this.reconnectTimer = setTimeout(() => {
       this.connect();
@@ -278,6 +448,11 @@ export class WebSocketService {
     if (this.heartbeatTimer) {
       clearInterval(this.heartbeatTimer);
       this.heartbeatTimer = null;
+    }
+
+    if (this.batchTimer) {
+      clearTimeout(this.batchTimer);
+      this.batchTimer = null;
     }
   }
 }

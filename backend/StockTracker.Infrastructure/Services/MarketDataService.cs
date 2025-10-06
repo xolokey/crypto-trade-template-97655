@@ -12,6 +12,8 @@ public class MarketDataService : IMarketDataService
     private readonly ITwelveDataService _twelveDataService;
     private readonly INSEService _nseService;
     private readonly ICacheService _cacheService;
+    private readonly IWebSocketNotificationService _wsNotificationService;
+    private readonly ISubscriptionTrackingService _subscriptionTrackingService;
     private readonly ILogger<MarketDataService> _logger;
 
     public MarketDataService(
@@ -19,12 +21,16 @@ public class MarketDataService : IMarketDataService
         ITwelveDataService twelveDataService,
         INSEService nseService,
         ICacheService cacheService,
+        IWebSocketNotificationService wsNotificationService,
+        ISubscriptionTrackingService subscriptionTrackingService,
         ILogger<MarketDataService> logger)
     {
         _alphaVantageService = alphaVantageService;
         _twelveDataService = twelveDataService;
         _nseService = nseService;
         _cacheService = cacheService;
+        _wsNotificationService = wsNotificationService;
+        _subscriptionTrackingService = subscriptionTrackingService;
         _logger = logger;
     }
 
@@ -39,11 +45,17 @@ public class MarketDataService : IMarketDataService
             return cached;
         }
 
+        StockQuote? quote = null;
+
         // Try Alpha Vantage first
-        var quote = await _alphaVantageService.GetQuoteAsync(symbol);
+        quote = await _alphaVantageService.GetQuoteAsync(symbol);
         if (quote != null)
         {
             await _cacheService.SetAsync(cacheKey, quote, TimeSpan.FromSeconds(10));
+            
+            // Publish to WebSocket if symbol is subscribed
+            await PublishQuoteUpdateAsync(symbol, quote);
+            
             return quote;
         }
 
@@ -52,6 +64,10 @@ public class MarketDataService : IMarketDataService
         if (quote != null)
         {
             await _cacheService.SetAsync(cacheKey, quote, TimeSpan.FromSeconds(10));
+            
+            // Publish to WebSocket if symbol is subscribed
+            await PublishQuoteUpdateAsync(symbol, quote);
+            
             return quote;
         }
 
@@ -60,12 +76,54 @@ public class MarketDataService : IMarketDataService
         if (quote != null)
         {
             await _cacheService.SetAsync(cacheKey, quote, TimeSpan.FromSeconds(10));
+            
+            // Publish to WebSocket if symbol is subscribed
+            await PublishQuoteUpdateAsync(symbol, quote);
+            
             return quote;
         }
 
         // Generate mock data as fallback
         _logger.LogWarning("All APIs failed for {Symbol}, generating mock data", symbol);
-        return GenerateMockQuote(symbol);
+        quote = GenerateMockQuote(symbol);
+        
+        // Publish mock data to WebSocket as well
+        if (quote != null)
+        {
+            await PublishQuoteUpdateAsync(symbol, quote);
+        }
+        
+        return quote;
+    }
+
+    /// <summary>
+    /// Publish quote update to WebSocket if symbol is subscribed
+    /// </summary>
+    private async Task PublishQuoteUpdateAsync(string symbol, StockQuote quote)
+    {
+        try
+        {
+            // Check if symbol is subscribed
+            var isSubscribed = await IsSymbolSubscribedAsync(symbol);
+            if (isSubscribed)
+            {
+                await _wsNotificationService.PublishPriceUpdateAsync(symbol, quote);
+                _logger.LogDebug("Published WebSocket update for subscribed symbol: {Symbol}", symbol);
+            }
+        }
+        catch (Exception ex)
+        {
+            // Don't fail the main operation if WebSocket publish fails
+            _logger.LogWarning(ex, "Failed to publish WebSocket update for {Symbol}", symbol);
+        }
+    }
+
+    /// <summary>
+    /// Check if a symbol is actively subscribed
+    /// </summary>
+    private async Task<bool> IsSymbolSubscribedAsync(string symbol)
+    {
+        return await _subscriptionTrackingService.IsSymbolSubscribedAsync(symbol);
     }
 
     public async Task<List<StockQuote>> GetMultipleQuotesAsync(List<string> symbols)

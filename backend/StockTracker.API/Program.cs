@@ -46,6 +46,13 @@ builder.Services.AddStackExchangeRedisCache(options =>
     options.InstanceName = "StockTracker_";
 });
 
+// Redis for PubSub
+builder.Services.AddSingleton<StackExchange.Redis.IConnectionMultiplexer>(sp =>
+{
+    var configuration = builder.Configuration.GetConnectionString("Redis");
+    return StackExchange.Redis.ConnectionMultiplexer.Connect(configuration ?? "localhost:6379");
+});
+
 // HTTP Clients
 builder.Services.AddHttpClient<IAlphaVantageService, AlphaVantageService>();
 builder.Services.AddHttpClient<ITwelveDataService, TwelveDataService>();
@@ -54,6 +61,12 @@ builder.Services.AddHttpClient<INSEService, NSEService>();
 // Services
 builder.Services.AddScoped<IMarketDataService, MarketDataService>();
 builder.Services.AddSingleton<ICacheService, CacheService>();
+builder.Services.AddSingleton<IWebSocketNotificationService, WebSocketNotificationService>();
+builder.Services.AddSingleton<ISubscriptionTrackingService, SubscriptionTrackingService>();
+
+// Background Services
+builder.Services.AddHostedService<ActiveSymbolsBackgroundService>();
+
 // Add these when implemented:
 // builder.Services.AddScoped<IPriceAlertService, PriceAlertService>();
 // builder.Services.AddScoped<IPortfolioService, PortfolioService>();

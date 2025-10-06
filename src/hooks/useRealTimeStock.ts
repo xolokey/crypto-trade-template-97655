@@ -1,13 +1,17 @@
-// Real-Time Stock Data Hook with WebSocket
-// Replaces polling with true real-time updates
+// Enhanced Real-Time Stock Data Hook with WebSocket
+// Provides automatic fallback to polling and comprehensive state management
 
 import { useState, useEffect, useRef, useCallback } from 'react';
+import { getWebSocketService, ConnectionState } from '@/services/websocketService';
 import { marketDataService, StockQuote } from '@/services/marketDataService';
 
 interface UseRealTimeStockOptions {
   symbol: string;
   enableWebSocket?: boolean;
-  fallbackInterval?: number; // Fallback to polling if WebSocket fails
+  fallbackToPolling?: boolean;
+  pollingInterval?: number;
+  onUpdate?: (data: StockQuote) => void;
+  onError?: (error: Error) => void;
 }
 
 interface UseRealTimeStockReturn {
@@ -16,27 +20,34 @@ interface UseRealTimeStockReturn {
   error: Error | null;
   isRealTime: boolean;
   isConnected: boolean;
+  connectionState: ConnectionState;
   lastUpdate: Date | null;
+  latency: number;
   refetch: () => Promise<void>;
 }
 
 export function useRealTimeStock({
   symbol,
   enableWebSocket = true,
-  fallbackInterval = 5000
+  fallbackToPolling = true,
+  pollingInterval = 30000,
+  onUpdate,
+  onError
 }: UseRealTimeStockOptions): UseRealTimeStockReturn {
   const [data, setData] = useState<StockQuote | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
   const [isRealTime, setIsRealTime] = useState(false);
   const [isConnected, setIsConnected] = useState(false);
+  const [connectionState, setConnectionState] = useState<ConnectionState>('CLOSED');
   const [lastUpdate, setLastUpdate] = useState<Date | null>(null);
+  const [latency, setLatency] = useState(0);
   
-  const wsRef = useRef<WebSocket | null>(null);
-  const intervalRef = useRef<NodeJS.Timeout | null>(null);
+  const pollingIntervalRef = useRef<NodeJS.Timeout | null>(null);
   const isMountedRef = useRef(true);
+  const wsServiceRef = useRef<ReturnType<typeof getWebSocketService> | null>(null);
 
-  // Fetch data from API
+  // Fetch data from API (used for polling fallback and initial load)
   const fetchData = useCallback(async () => {
     try {
       setLoading(true);
@@ -48,111 +59,164 @@ export function useRealTimeStock({
         setData(quote);
         setLastUpdate(new Date());
         setLoading(false);
+        
+        if (onUpdate) {
+          onUpdate(quote);
+        }
       }
     } catch (err) {
       if (isMountedRef.current) {
-        setError(err instanceof Error ? err : new Error('Failed to fetch stock data'));
+        const errorObj = err instanceof Error ? err : new Error('Failed to fetch stock data');
+        setError(errorObj);
         setLoading(false);
+        
+        if (onError) {
+          onError(errorObj);
+        }
       }
+    }
+  }, [symbol, onUpdate, onError]);
+
+  // Start polling fallback
+  const startPolling = useCallback(() => {
+    if (pollingIntervalRef.current) {
+      clearInterval(pollingIntervalRef.current);
+    }
+
+    console.log(`⏱️  Starting polling for ${symbol} (${pollingInterval}ms interval)`);
+    setIsRealTime(false);
+    
+    // Initial fetch
+    fetchData();
+    
+    // Set up interval
+    pollingIntervalRef.current = setInterval(fetchData, pollingInterval);
+  }, [symbol, pollingInterval, fetchData]);
+
+  // Stop polling
+  const stopPolling = useCallback(() => {
+    if (pollingIntervalRef.current) {
+      console.log(`⏹️  Stopping polling for ${symbol}`);
+      clearInterval(pollingIntervalRef.current);
+      pollingIntervalRef.current = null;
     }
   }, [symbol]);
 
-  // WebSocket connection
+  // WebSocket setup
   useEffect(() => {
+    // If WebSocket is disabled, use polling only
     if (!enableWebSocket) {
-      // Use polling fallback
-      fetchData();
-      intervalRef.current = setInterval(fetchData, fallbackInterval);
+      startPolling();
       return () => {
-        if (intervalRef.current) clearInterval(intervalRef.current);
+        stopPolling();
       };
     }
 
-    // Try WebSocket connection
-    const wsUrl = import.meta.env.VITE_WS_URL || 
-      (import.meta.env.PROD ? 'wss://your-api.com/ws/market-data' : 'ws://localhost:8081');
-
+    // Get WebSocket URL from environment
+    const wsUrl = import.meta.env.VITE_WS_URL || 'ws://localhost:8081';
+    
     try {
-      console.log(`🔌 Connecting to WebSocket for ${symbol}...`);
-      wsRef.current = new WebSocket(wsUrl);
+      // Initialize WebSocket service
+      wsServiceRef.current = getWebSocketService(wsUrl);
+      const wsService = wsServiceRef.current;
 
-      wsRef.current.onopen = () => {
-        console.log(`✅ WebSocket connected for ${symbol}`);
-        setIsConnected(true);
-        setIsRealTime(true);
-        
-        // Subscribe to symbol
-        wsRef.current?.send(JSON.stringify({
-          action: 'subscribe',
-          symbols: [symbol]
-        }));
-
-        // Initial fetch
-        fetchData();
-      };
-
-      wsRef.current.onmessage = (event) => {
-        try {
-          const message = JSON.parse(event.data);
-          
-          if (message.type === 'price_update' && message.symbol === symbol) {
-            console.log(`📊 Real-time update for ${symbol}:`, message.data);
+      // Set up message handler
+      const unsubscribeMessage = wsService.onMessage((message) => {
+        if (message.type === 'price_update' && message.symbol === symbol) {
+          if (isMountedRef.current) {
+            setData(message.data);
+            setLastUpdate(new Date(message.timestamp));
+            setLoading(false);
             
-            if (isMountedRef.current) {
-              setData(message.data);
-              setLastUpdate(new Date(message.timestamp));
-              setLoading(false);
+            // Calculate latency
+            if (message.timestamp) {
+              const msgLatency = Date.now() - new Date(message.timestamp).getTime();
+              setLatency(msgLatency);
+            }
+            
+            if (onUpdate) {
+              onUpdate(message.data);
             }
           }
-        } catch (err) {
-          console.error('Error parsing WebSocket message:', err);
         }
-      };
+      });
 
-      wsRef.current.onerror = (error) => {
-        console.error(`❌ WebSocket error for ${symbol}:`, error);
-        setIsConnected(false);
-        setIsRealTime(false);
-        
-        // Fallback to polling
-        console.log(`⏱️ Falling back to polling for ${symbol}`);
-        fetchData();
-        intervalRef.current = setInterval(fetchData, fallbackInterval);
-      };
-
-      wsRef.current.onclose = () => {
-        console.log(`🔌 WebSocket closed for ${symbol}`);
-        setIsConnected(false);
-        setIsRealTime(false);
-        
-        // Fallback to polling
+      // Set up error handler
+      const unsubscribeError = wsService.onError((err) => {
+        console.error(`WebSocket error for ${symbol}:`, err);
         if (isMountedRef.current) {
-          fetchData();
-          intervalRef.current = setInterval(fetchData, fallbackInterval);
+          setError(err);
+          
+          if (onError) {
+            onError(err);
+          }
         }
-      };
+      });
 
-    } catch (err) {
-      console.error(`Failed to create WebSocket for ${symbol}:`, err);
-      // Fallback to polling
+      // Set up connection state handler
+      const unsubscribeConnection = wsService.onConnectionChange((state) => {
+        if (isMountedRef.current) {
+          setConnectionState(state);
+          setIsConnected(state === 'OPEN');
+          
+          if (state === 'OPEN') {
+            console.log(`✅ WebSocket connected for ${symbol}`);
+            setIsRealTime(true);
+            stopPolling();
+          } else if (state === 'CLOSED' || state === 'RECONNECTING') {
+            console.log(`🔌 WebSocket ${state.toLowerCase()} for ${symbol}`);
+            setIsRealTime(false);
+            
+            // Fall back to polling if enabled
+            if (fallbackToPolling && state === 'CLOSED') {
+              startPolling();
+            }
+          }
+        }
+      });
+
+      // Connect to WebSocket
+      wsService.connect();
+
+      // Subscribe to symbol
+      wsService.subscribe(symbol);
+
+      // Initial fetch while connecting
       fetchData();
-      intervalRef.current = setInterval(fetchData, fallbackInterval);
-    }
 
-    return () => {
       // Cleanup
-      if (wsRef.current) {
-        wsRef.current.send(JSON.stringify({
-          action: 'unsubscribe',
-          symbols: [symbol]
-        }));
-        wsRef.current.close();
+      return () => {
+        unsubscribeMessage();
+        unsubscribeError();
+        unsubscribeConnection();
+        wsService.unsubscribe(symbol);
+        stopPolling();
+      };
+    } catch (err) {
+      console.error(`Failed to initialize WebSocket for ${symbol}:`, err);
+      
+      // Fall back to polling
+      if (fallbackToPolling) {
+        startPolling();
       }
-      if (intervalRef.current) {
-        clearInterval(intervalRef.current);
-      }
-    };
-  }, [symbol, enableWebSocket, fallbackInterval, fetchData]);
+      
+      return () => {
+        stopPolling();
+      };
+    }
+  }, [symbol, enableWebSocket, fallbackToPolling, pollingInterval, fetchData, startPolling, stopPolling, onUpdate, onError]);
+
+  // Update latency from WebSocket service
+  useEffect(() => {
+    if (wsServiceRef.current && isConnected) {
+      const interval = setInterval(() => {
+        const avgLatency = wsServiceRef.current?.getLatency() || 0;
+        setLatency(avgLatency);
+      }, 5000);
+
+      return () => clearInterval(interval);
+    }
+  }, [isConnected]);
 
   // Cleanup on unmount
   useEffect(() => {
@@ -167,18 +231,20 @@ export function useRealTimeStock({
     error,
     isRealTime,
     isConnected,
+    connectionState,
     lastUpdate,
+    latency,
     refetch: fetchData
   };
 }
 
-// Convenience hook for single stock
+// Convenience hook for single stock with default options
 export function useRealTimePrice(symbol: string) {
   return useRealTimeStock({ symbol });
 }
 
-// Hook for multiple stocks (uses polling, not WebSocket)
-export function useMultipleRealTimeStocks(symbols: string[], interval = 5000) {
+// Hook for multiple stocks (uses polling, not WebSocket for now)
+export function useMultipleRealTimeStocks(symbols: string[], interval = 30000) {
   const [data, setData] = useState<StockQuote[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);

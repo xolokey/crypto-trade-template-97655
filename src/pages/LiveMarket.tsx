@@ -7,6 +7,8 @@ import { useNavigate } from 'react-router-dom';
 import LiveMarketIndices from '@/components/market/LiveMarketIndices';
 import LiveStockTicker from '@/components/market/LiveStockTicker';
 import { getNifty50Stocks } from '@/data/nseStocks';
+import { ConnectionStatusIndicator } from '@/components/realtime/ConnectionStatusIndicator';
+import { useRealTimeStock } from '@/hooks/useRealTimeStock';
 
 interface LiveStock {
   symbol: string;
@@ -23,6 +25,13 @@ const LiveMarket = () => {
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [liveStocks, setLiveStocks] = useState<LiveStock[]>([]);
   const [currentTime, setCurrentTime] = useState(new Date());
+  
+  // Use real-time connection for connection status
+  const { isConnected, isRealTime, connectionState, lastUpdate, latency } = useRealTimeStock({
+    symbol: 'NIFTY',
+    enableWebSocket: true,
+    fallbackToPolling: true
+  });
 
   // Initialize stocks
   useEffect(() => {
@@ -210,6 +219,17 @@ const LiveMarket = () => {
           </p>
         </div>
       </div>
+      
+      {/* Connection Status Indicator */}
+      <ConnectionStatusIndicator
+        isConnected={isConnected}
+        isRealTime={isRealTime}
+        connectionState={connectionState}
+        lastUpdate={lastUpdate}
+        latency={latency}
+        showDetails={true}
+        position="top-right"
+      />
     </div>
   );
 };

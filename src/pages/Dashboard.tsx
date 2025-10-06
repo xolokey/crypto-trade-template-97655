@@ -8,6 +8,8 @@ import { useToast } from "@/hooks/use-toast";
 import { useStocks } from "@/hooks/useStocks";
 import { seedStocks } from "@/lib/seedStocks";
 import AIEnhancedDashboard from "@/components/dashboard/AIEnhancedDashboard";
+import { ConnectionStatusIndicator } from "@/components/realtime/ConnectionStatusIndicator";
+import { useRealTimeStock } from "@/hooks/useRealTimeStock";
 
 export default function Dashboard() {
   const [user, setUser] = useState<User | null>(null);
@@ -15,6 +17,13 @@ export default function Dashboard() {
   const { toast } = useToast();
   
   const { refreshStocks } = useStocks();
+  
+  // Use real-time connection for a sample stock to show connection status
+  const { isConnected, isRealTime, connectionState, lastUpdate, latency } = useRealTimeStock({
+    symbol: 'RELIANCE',
+    enableWebSocket: true,
+    fallbackToPolling: true
+  });
 
   useEffect(() => {
     // Check for existing session
@@ -119,6 +128,17 @@ export default function Dashboard() {
 
       {/* AI Enhanced Dashboard */}
       <AIEnhancedDashboard />
+      
+      {/* Connection Status Indicator */}
+      <ConnectionStatusIndicator
+        isConnected={isConnected}
+        isRealTime={isRealTime}
+        connectionState={connectionState}
+        lastUpdate={lastUpdate}
+        latency={latency}
+        showDetails={true}
+        position="top-right"
+      />
     </div>
   );
 }
