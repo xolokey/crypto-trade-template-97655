@@ -12,6 +12,12 @@ dist
 dist-ssr
 *.local
 
+# Environment variables
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
@@ -22,3 +28,20 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Build outputs
+build/
+out/
+
+# Vercel
+.vercel
+
+# Bundle analyzer
+bundle-analyzer-report.html
+
+# Coverage reports
+coverage/
+
+# Temporary files
+*.tmp
+*.temp
