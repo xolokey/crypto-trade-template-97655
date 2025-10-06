@@ -8,11 +8,46 @@ if (env.GEMINI_API_KEY) {
   genAI = new GoogleGenerativeAI(env.GEMINI_API_KEY);
 }
 
-export const getGeminiModel = () => {
+// Try multiple model names in order of preference
+const MODEL_NAMES = [
+  'gemini-1.5-flash-latest',
+  'gemini-1.5-flash',
+  'gemini-1.5-pro-latest', 
+  'gemini-1.5-pro',
+  'gemini-pro'
+];
+
+let cachedModelName: string | null = null;
+
+export const getGeminiModel = async () => {
   if (!genAI) {
     throw new Error('Gemini API key not configured');
   }
-  return genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
+  
+  // If we already found a working model, use it
+  if (cachedModelName) {
+    return genAI.getGenerativeModel({ model: cachedModelName });
+  }
+  
+  // Try each model until one works
+  for (const modelName of MODEL_NAMES) {
+    try {
+      const model = genAI.getGenerativeModel({ model: modelName });
+      // Test if the model is accessible
+      console.log(`Trying model: ${modelName}`);
+      cachedModelName = modelName;
+      console.log(`✅ Successfully using model: ${modelName}`);
+      return model;
+    } catch (error) {
+      console.log(`❌ Model ${modelName} not available, trying next...`);
+      continue;
+    }
+  }
+  
+  // If all fail, default to gemini-pro
+  console.log('Using fallback model: gemini-pro');
+  cachedModelName = 'gemini-pro';
+  return genAI.getGenerativeModel({ model: 'gemini-pro' });
 };
 
 export const isGeminiAvailable = () => {
@@ -81,33 +116,39 @@ export const generateStockAnalysis = async (
   }
 
   try {
-    const model = getGeminiModel();
+    const model = await getGeminiModel();
     const prompt = STOCK_ANALYSIS_PROMPTS[type](stockData, additionalData);
     
     console.log('Generating analysis for:', stockData.symbol, 'Type:', type);
+    console.log('Using model:', cachedModelName || 'gemini-pro');
     
     const result = await model.generateContent(prompt);
-    const response = await result.response;
+    const response = result.response;
     const text = response.text();
     
-    console.log('Analysis generated successfully');
+    console.log('✅ Analysis generated successfully');
     return text;
   } catch (error: any) {
     console.error('Gemini API error details:', {
       message: error?.message,
       status: error?.status,
+      statusText: error?.statusText,
       error: error
     });
     
     // Provide more specific error messages
-    if (error?.message?.includes('API key')) {
-      throw new Error('Invalid Gemini API key. Please check your configuration.');
-    } else if (error?.message?.includes('quota')) {
-      throw new Error('API quota exceeded. Please try again later.');
-    } else if (error?.message?.includes('blocked')) {
+    if (error?.message?.includes('API key') || error?.message?.includes('API_KEY')) {
+      throw new Error('Invalid Gemini API key. Get a new one at: https://makersuite.google.com/app/apikey');
+    } else if (error?.message?.includes('quota') || error?.message?.includes('QUOTA')) {
+      throw new Error('API quota exceeded. Please try again later or upgrade your plan.');
+    } else if (error?.message?.includes('blocked') || error?.message?.includes('BLOCKED')) {
       throw new Error('Content was blocked by safety filters. Try a different stock.');
+    } else if (error?.message?.includes('404') || error?.message?.includes('not found')) {
+      throw new Error('Gemini API model not accessible. Your API key may need to be regenerated. Visit: https://makersuite.google.com/app/apikey');
+    } else if (error?.message?.includes('403') || error?.message?.includes('permission')) {
+      throw new Error('Permission denied. Please regenerate your API key at: https://makersuite.google.com/app/apikey');
     } else {
-      throw new Error(`Failed to generate analysis: ${error?.message || 'Unknown error'}`);
+      throw new Error(`Failed to generate analysis: ${error?.message || 'Unknown error'}. Try regenerating your API key.`);
     }
   }
 };
@@ -138,9 +179,9 @@ export const generatePortfolioInsights = async (portfolioData: any[]) => {
   `;
 
   try {
-    const model = getGeminiModel();
+    const model = await getGeminiModel();
     const result = await model.generateContent(prompt);
-    const response = await result.response;
+    const response = result.response;
     return response.text();
   } catch (error) {
     console.error('Gemini API error:', error);

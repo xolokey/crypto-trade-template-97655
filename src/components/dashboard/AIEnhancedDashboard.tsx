@@ -225,11 +225,31 @@ const AIEnhancedDashboard = () => {
           </Alert>
         )}
 
-        {/* Live Stock Ticker */}
-        <LiveStockTicker />
+        {/* Live Market Data Section */}
+        <Card className="border-primary/20 bg-gradient-to-br from-primary/5 to-transparent">
+          <CardHeader className="pb-3">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="relative flex h-3 w-3">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+                  <span className="relative inline-flex rounded-full h-3 w-3 bg-red-500"></span>
+                </div>
+                <CardTitle className="text-xl">Live Market Data</CardTitle>
+                <Badge variant="destructive" className="animate-pulse">
+                  LIVE
+                </Badge>
+              </div>
+              <p className="text-sm text-muted-foreground">Updates every 2 seconds</p>
+            </div>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            {/* Live Stock Ticker */}
+            <LiveStockTicker />
 
-        {/* Live Market Indices */}
-        <LiveMarketIndices />
+            {/* Live Market Indices */}
+            <LiveMarketIndices />
+          </CardContent>
+        </Card>
 
         {/* Main Content */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">

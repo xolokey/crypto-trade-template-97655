@@ -96,10 +96,24 @@ export default function Dashboard() {
               <p className="text-xs text-muted-foreground">AI-Powered Stock Market</p>
             </div>
           </div>
-          <Button onClick={handleSignOut} variant="ghost" size="sm" className="text-muted-foreground hover:text-foreground">
-            <LogOut className="mr-2 h-4 w-4" />
-            Sign Out
-          </Button>
+          <div className="flex items-center gap-2">
+            <Button 
+              onClick={() => navigate("/live-market")} 
+              variant="outline" 
+              size="sm" 
+              className="border-primary/50 text-primary hover:bg-primary/10"
+            >
+              <div className="relative flex h-2 w-2 mr-2">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-2 w-2 bg-red-500"></span>
+              </div>
+              Live Market
+            </Button>
+            <Button onClick={handleSignOut} variant="ghost" size="sm" className="text-muted-foreground hover:text-foreground">
+              <LogOut className="mr-2 h-4 w-4" />
+              Sign Out
+            </Button>
+          </div>
         </div>
       </header>
 

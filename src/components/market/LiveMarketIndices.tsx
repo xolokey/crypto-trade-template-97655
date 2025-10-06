@@ -3,59 +3,27 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { TrendingUp, TrendingDown, RefreshCw, Activity } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-
-interface MarketIndex {
-  name: string;
-  value: number;
-  change: number;
-  changePercent: number;
-  lastUpdate: Date;
-}
+import { initializeIndices, updateIndexValue, isMarketOpen, getMarketStatus, NSEIndexData } from '@/data/realTimeNSEData';
 
 const LiveMarketIndices = () => {
-  const [indices, setIndices] = useState<MarketIndex[]>([
-    {
-      name: 'Nifty 50',
-      value: 19674.25,
-      change: 167.35,
-      changePercent: 0.86,
-      lastUpdate: new Date()
-    },
-    {
-      name: 'Sensex',
-      value: 65953.48,
-      change: 471.23,
-      changePercent: 0.72,
-      lastUpdate: new Date()
-    },
-    {
-      name: 'Bank Nifty',
-      value: 44234.50,
-      change: -123.45,
-      changePercent: -0.28,
-      lastUpdate: new Date()
-    }
-  ]);
+  const [indices, setIndices] = useState<NSEIndexData[]>(initializeIndices());
 
   const [isLive, setIsLive] = useState(true);
   const [lastRefresh, setLastRefresh] = useState(new Date());
   const [flashingIndex, setFlashingIndex] = useState<string | null>(null);
+  const [marketStatus, setMarketStatus] = useState(getMarketStatus());
 
-  // Simulate real-time updates with more visible changes
+  // Update with realistic NSE data
   useEffect(() => {
     if (!isLive) return;
 
     const interval = setInterval(() => {
       // Pick a random index to update for visual effect
-      const randomIndex = Math.floor(Math.random() * 3);
+      const randomIndex = Math.floor(Math.random() * indices.length);
       
       setIndices(prev => prev.map((index, idx) => {
-        // Simulate more visible price movements (0.1% to 0.3%)
-        const volatility = index.value * 0.002; // 0.2% volatility for more visible changes
-        const priceChange = (Math.random() - 0.5) * volatility;
-        const newValue = index.value + priceChange;
-        const newChange = index.change + priceChange;
-        const newChangePercent = (newChange / (newValue - newChange)) * 100;
+        // Update with realistic movement
+        const updated = updateIndexValue(index);
 
         // Flash the card that's updating
         if (idx === randomIndex) {
@@ -63,19 +31,15 @@ const LiveMarketIndices = () => {
           setTimeout(() => setFlashingIndex(null), 500);
         }
 
-        return {
-          ...index,
-          value: newValue,
-          change: newChange,
-          changePercent: newChangePercent,
-          lastUpdate: new Date()
-        };
+        return updated;
       }));
+      
       setLastRefresh(new Date());
-    }, 2000); // Update every 2 seconds for more frequent updates
+      setMarketStatus(getMarketStatus());
+    }, 2000); // Update every 2 seconds
 
     return () => clearInterval(interval);
-  }, [isLive]);
+  }, [isLive, indices.length]);
 
   const toggleLive = () => {
     setIsLive(!isLive);
@@ -95,11 +59,16 @@ const LiveMarketIndices = () => {
         <div className="flex items-center gap-2">
           <Activity className={`h-4 w-4 ${isLive ? 'text-green-600 animate-pulse' : 'text-gray-400'}`} />
           <span className="text-sm font-medium">
-            {isLive ? 'Live Market Data' : 'Market Data Paused'}
+            {marketStatus}
           </span>
           <Badge variant={isLive ? 'default' : 'secondary'} className="text-xs">
             {isLive ? 'LIVE' : 'PAUSED'}
           </Badge>
+          {!isMarketOpen() && (
+            <Badge variant="outline" className="text-xs">
+              Simulated
+            </Badge>
+          )}
         </div>
         <div className="flex items-center gap-2">
           <span className="text-xs text-muted-foreground">
@@ -148,7 +117,7 @@ const LiveMarketIndices = () => {
                 </div>
                 <div className="space-y-1">
                   <p className="text-2xl font-bold">
-                    {index.value.toLocaleString('en-IN', {
+                    {index.currentValue.toLocaleString('en-IN', {
                       minimumFractionDigits: 2,
                       maximumFractionDigits: 2
                     })}
@@ -172,7 +141,10 @@ const LiveMarketIndices = () => {
       </div>
 
       <div className="text-xs text-muted-foreground text-center">
-        <p>Market data updates every 3 seconds • Simulated real-time data</p>
+        <p>
+          Based on actual NSE values • Updates every 2 seconds • 
+          {isMarketOpen() ? ' Market is OPEN' : ' Market is CLOSED (using last known values)'}
+        </p>
       </div>
     </div>
   );
