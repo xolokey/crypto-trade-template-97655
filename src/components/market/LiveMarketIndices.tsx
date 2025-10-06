@@ -4,6 +4,7 @@ import { Badge } from '@/components/ui/badge';
 import { TrendingUp, TrendingDown, RefreshCw, Activity } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { initializeIndices, updateIndexValue, isMarketOpen, getMarketStatus, NSEIndexData } from '@/data/realTimeNSEData';
+import { marketDataService } from '@/services/marketDataService';
 
 const LiveMarketIndices = () => {
   const [indices, setIndices] = useState<NSEIndexData[]>(initializeIndices());
