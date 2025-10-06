@@ -24,6 +24,7 @@ import AdvancedStockSearch from '@/components/search/AdvancedStockSearch';
 import AddToPortfolioDialog from '@/components/portfolio/AddToPortfolioDialog';
 import APIStatusIndicator from '@/components/debug/APIStatusIndicator';
 import DatabaseSetupBanner from '@/components/setup/DatabaseSetupBanner';
+import { SeedDatabaseButton } from '@/components/setup/SeedDatabaseButton';
 import LiveMarketIndices from '@/components/market/LiveMarketIndices';
 import LiveStockTicker from '@/components/market/LiveStockTicker';
 import { isGeminiAvailable } from '@/lib/gemini';
@@ -192,6 +193,7 @@ const AIEnhancedDashboard = () => {
             </p>
           </div>
           <div className="flex items-center gap-2">
+            <SeedDatabaseButton />
             {isGeminiAvailable() ? (
               <Badge variant="default" className="bg-green-100 text-green-800 border-green-200">
                 <Sparkles className="h-3 w-3 mr-1" />
