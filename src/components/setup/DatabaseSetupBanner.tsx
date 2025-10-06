@@ -11,14 +11,20 @@ const DatabaseSetupBanner = () => {
   useEffect(() => {
     const checkTables = async () => {
       try {
-        // Try to query watchlist table
-        const { error } = await supabase
-          .from('watchlist')
+        // Try to query watchlists and portfolio tables
+        const { error: watchlistError } = await supabase
+          .from('watchlists')
           .select('id')
           .limit(1);
 
-        // If we get a "table does not exist" error, show banner
-        if (error && (error.code === 'PGRST116' || error.message.includes('does not exist'))) {
+        const { error: portfolioError } = await supabase
+          .from('portfolio')
+          .select('id')
+          .limit(1);
+
+        // If either table doesn't exist, show banner
+        if ((watchlistError && watchlistError.code === 'PGRST205') || 
+            (portfolioError && portfolioError.code === 'PGRST205')) {
           setShowBanner(true);
         }
       } catch (error) {

@@ -14,6 +14,45 @@ export type Database = {
   }
   public: {
     Tables: {
+      portfolio: {
+        Row: {
+          added_at: string | null
+          average_price: number
+          id: string
+          quantity: number
+          sector: string | null
+          stock_name: string
+          stock_symbol: string
+          total_invested: number
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          added_at?: string | null
+          average_price: number
+          id?: string
+          quantity: number
+          sector?: string | null
+          stock_name: string
+          stock_symbol: string
+          total_invested: number
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          added_at?: string | null
+          average_price?: number
+          id?: string
+          quantity?: number
+          sector?: string | null
+          stock_name?: string
+          stock_symbol?: string
+          total_invested?: number
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           created_at: string | null

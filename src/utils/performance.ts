@@ -21,6 +21,7 @@ export const logWebVitals = (metric: any) => {
 export const reportWebVitals = async () => {
   if (import.meta.env.PROD) {
     try {
+      // @ts-ignore - web-vitals is optional
       const { getCLS, getFID, getFCP, getLCP, getTTFB } = await import('web-vitals');
       
       getCLS(logWebVitals);

@@ -270,16 +270,18 @@ const AIEnhancedDashboard = () => {
                 ) : watchlist.length > 0 ? (
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     {watchlist.map((item) => {
+                      if (!item.stocks) return null;
+                      
                       const mockData = {
-                        id: item.stock_symbol,
-                        symbol: item.stock_symbol,
-                        name: item.stock_name,
+                        id: item.stocks.symbol,
+                        symbol: item.stocks.symbol,
+                        name: item.stocks.name,
                         price: Math.random() * 5000 + 100,
                         change: (Math.random() - 0.5) * 100,
                         changePercent: (Math.random() - 0.5) * 10,
                         volume: Math.floor(Math.random() * 10000000),
                         marketCap: '₹1.2L Cr',
-                        sector: item.sector,
+                        sector: item.stocks.sector,
                         high52w: Math.random() * 6000 + 100,
                         low52w: Math.random() * 2000 + 50
                       };
@@ -290,16 +292,16 @@ const AIEnhancedDashboard = () => {
                           stock={mockData}
                           isWatchlisted={true}
                           onToggleWatchlist={() => handleToggleWatchlist({ 
-                            symbol: item.stock_symbol, 
-                            name: item.stock_name, 
-                            sector: item.sector 
+                            symbol: item.stocks.symbol, 
+                            name: item.stocks.name, 
+                            sector: item.stocks.sector 
                           } as NSEStock)}
                           onViewDetails={() => handleViewDetails(mockData)}
                           onAIAnalysis={() => handleAIAnalysis(mockData)}
                           onAddToPortfolio={() => handleAddToPortfolio({ 
-                            symbol: item.stock_symbol, 
-                            name: item.stock_name, 
-                            sector: item.sector 
+                            symbol: item.stocks.symbol, 
+                            name: item.stocks.name, 
+                            sector: item.stocks.sector 
                           } as NSEStock)}
                         />
                       );

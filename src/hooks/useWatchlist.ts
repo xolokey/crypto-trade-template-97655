@@ -6,10 +6,13 @@ import { NSEStock } from '@/data/nseStocks';
 export interface WatchlistItem {
   id: string;
   user_id: string;
-  stock_symbol: string;
-  stock_name: string;
-  sector: string;
+  stock_id: string;
   added_at: string;
+  stocks?: {
+    symbol: string;
+    name: string;
+    sector: string;
+  };
 }
 
 export const useWatchlist = (userId?: string) => {
@@ -24,8 +27,15 @@ export const useWatchlist = (userId?: string) => {
     setLoading(true);
     try {
       const { data, error } = await supabase
-        .from('watchlist')
-        .select('*')
+        .from('watchlists')
+        .select(`
+          *,
+          stocks (
+            symbol,
+            name,
+            sector
+          )
+        `)
         .eq('user_id', userId)
         .order('added_at', { ascending: false });
 
@@ -67,7 +77,9 @@ export const useWatchlist = (userId?: string) => {
 
     try {
       // Check if already in watchlist
-      const existing = watchlist.find(item => item.stock_symbol === stock.symbol);
+      const existing = watchlist.find(item => 
+        item.stocks?.symbol === stock.symbol
+      );
       if (existing) {
         toast({
           title: 'Already in Watchlist',
@@ -77,15 +89,36 @@ export const useWatchlist = (userId?: string) => {
         return;
       }
 
+      // Find stock ID from stocks table
+      const { data: stockData, error: stockError } = await supabase
+        .from('stocks')
+        .select('id')
+        .eq('symbol', stock.symbol)
+        .single();
+
+      if (stockError || !stockData) {
+        toast({
+          title: 'Error',
+          description: 'Stock not found in database',
+          variant: 'destructive'
+        });
+        return;
+      }
+
       const { data, error } = await supabase
-        .from('watchlist')
+        .from('watchlists')
         .insert({
           user_id: userId,
-          stock_symbol: stock.symbol,
-          stock_name: stock.name,
-          sector: stock.sector
+          stock_id: stockData.id
         })
-        .select()
+        .select(`
+          *,
+          stocks (
+            symbol,
+            name,
+            sector
+          )
+        `)
         .single();
 
       if (error) throw error;
@@ -110,15 +143,19 @@ export const useWatchlist = (userId?: string) => {
     if (!userId) return;
 
     try {
+      // Find the watchlist item by stock symbol
+      const item = watchlist.find(w => w.stocks?.symbol === stockSymbol);
+      if (!item) return;
+
       const { error } = await supabase
-        .from('watchlist')
+        .from('watchlists')
         .delete()
-        .eq('user_id', userId)
-        .eq('stock_symbol', stockSymbol);
+        .eq('id', item.id)
+        .eq('user_id', userId);
 
       if (error) throw error;
 
-      setWatchlist(prev => prev.filter(item => item.stock_symbol !== stockSymbol));
+      setWatchlist(prev => prev.filter(w => w.id !== item.id));
       toast({
         title: 'Removed from Watchlist',
         description: `${stockSymbol} has been removed from your watchlist`
@@ -135,7 +172,7 @@ export const useWatchlist = (userId?: string) => {
 
   // Toggle watchlist
   const toggleWatchlist = async (stock: NSEStock) => {
-    const existing = watchlist.find(item => item.stock_symbol === stock.symbol);
+    const existing = watchlist.find(item => item.stocks?.symbol === stock.symbol);
     if (existing) {
       await removeFromWatchlist(stock.symbol);
     } else {
@@ -145,12 +182,14 @@ export const useWatchlist = (userId?: string) => {
 
   // Check if stock is in watchlist
   const isInWatchlist = (stockSymbol: string) => {
-    return watchlist.some(item => item.stock_symbol === stockSymbol);
+    return watchlist.some(item => item.stocks?.symbol === stockSymbol);
   };
 
   // Get watchlisted stock symbols
   const getWatchlistedSymbols = () => {
-    return watchlist.map(item => item.stock_symbol);
+    return watchlist
+      .map(item => item.stocks?.symbol)
+      .filter((symbol): symbol is string => symbol !== undefined);
   };
 
   useEffect(() => {
