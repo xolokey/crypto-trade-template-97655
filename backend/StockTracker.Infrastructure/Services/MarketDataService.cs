@@ -84,14 +84,73 @@ public class MarketDataService : IMarketDataService
             return cached;
         }
 
-        var indices = await _nseService.GetAllIndicesAsync();
+        // Fetch real index data from Alpha Vantage or Twelve Data
+        var indices = new List<IndexData>();
+        
+        // Nifty 50 (^NSEI)
+        var niftyQuote = await GetStockQuoteAsync("^NSEI");
+        if (niftyQuote != null)
+        {
+            indices.Add(new IndexData
+            {
+                Name = "Nifty 50",
+                CurrentValue = niftyQuote.Price,
+                Change = niftyQuote.Change,
+                ChangePercent = niftyQuote.ChangePercent,
+                High = niftyQuote.High,
+                Low = niftyQuote.Low,
+                Open = niftyQuote.Open,
+                PreviousClose = niftyQuote.PreviousClose,
+                LastUpdate = niftyQuote.Timestamp
+            });
+        }
+
+        // Sensex (^BSESN)
+        var sensexQuote = await GetStockQuoteAsync("^BSESN");
+        if (sensexQuote != null)
+        {
+            indices.Add(new IndexData
+            {
+                Name = "Sensex",
+                CurrentValue = sensexQuote.Price,
+                Change = sensexQuote.Change,
+                ChangePercent = sensexQuote.ChangePercent,
+                High = sensexQuote.High,
+                Low = sensexQuote.Low,
+                Open = sensexQuote.Open,
+                PreviousClose = sensexQuote.PreviousClose,
+                LastUpdate = sensexQuote.Timestamp
+            });
+        }
+
+        // Bank Nifty (^NSEBANK)
+        var bankNiftyQuote = await GetStockQuoteAsync("^NSEBANK");
+        if (bankNiftyQuote != null)
+        {
+            indices.Add(new IndexData
+            {
+                Name = "Bank Nifty",
+                CurrentValue = bankNiftyQuote.Price,
+                Change = bankNiftyQuote.Change,
+                ChangePercent = bankNiftyQuote.ChangePercent,
+                High = bankNiftyQuote.High,
+                Low = bankNiftyQuote.Low,
+                Open = bankNiftyQuote.Open,
+                PreviousClose = bankNiftyQuote.PreviousClose,
+                LastUpdate = bankNiftyQuote.Timestamp
+            });
+        }
+
+        // If we got real data, cache it
         if (indices.Count > 0)
         {
-            await _cacheService.SetAsync(cacheKey, indices, TimeSpan.FromSeconds(5));
+            await _cacheService.SetAsync(cacheKey, indices, TimeSpan.FromSeconds(10));
+            _logger.LogInformation("Fetched {Count} real market indices", indices.Count);
             return indices;
         }
 
-        // Return mock indices
+        // Fallback to mock data
+        _logger.LogWarning("Failed to fetch real indices, using mock data");
         return GenerateMockIndices();
     }
 

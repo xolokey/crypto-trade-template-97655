@@ -17,79 +17,100 @@ const LiveMarketIndices = () => {
   const [flashingIndex, setFlashingIndex] = useState<string | null>(null);
   const [marketStatus, setMarketStatus] = useState(getMarketStatus());
 
-  // Try to fetch real data, fallback to simulated
+  // Fetch real data from .NET backend
   useEffect(() => {
     const fetchRealData = async () => {
       try {
-        // Try to fetch from backend API
-        const response = await fetch('/api/nse-live-data?type=index');
+        const API_BASE = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000';
+        const response = await fetch(`${API_BASE}/api/market-data/indices`);
+        
         if (response.ok) {
           const result = await response.json();
-          if (result.success && result.data) {
+          if (result.success && result.data && result.data.length > 0) {
             setUseRealData(true);
-            // Map API data to our format
-            const niftyIndex = initializeIndices()[0];
-            setIndices([
-              {
-                ...niftyIndex,
-                currentValue: result.data.value || 19674.25,
-                change: result.data.change || 0,
-                changePercent: result.data.changePercent || 0,
-                lastUpdate: new Date()
-              },
-              // Add more indices as they become available
-              ...initializeIndices().slice(1)
-            ]);
-            console.log('✅ Using real NSE data');
+            
+            // Map backend data to our format
+            const mappedIndices = result.data.map((index: any) => ({
+              name: index.name,
+              baseValue: index.currentValue,
+              currentValue: index.currentValue,
+              change: index.change,
+              changePercent: index.changePercent,
+              high: index.high,
+              low: index.low,
+              open: index.open,
+              previousClose: index.previousClose,
+              lastUpdate: new Date(index.lastUpdate)
+            }));
+            
+            setIndices(mappedIndices);
+            console.log('✅ Using real market indices from backend');
+            
+            toast({
+              title: "Real Data Connected",
+              description: `Fetched ${result.data.length} live market indices`,
+              duration: 3000,
+            });
             return;
           }
         }
       } catch (error) {
-        console.log('⚠️ Real API not available, using simulated data');
+        console.log('⚠️ Backend API not available, using simulated data');
       }
       
       // Fallback to simulated data
       setUseRealData(false);
+      toast({
+        title: "Using Simulated Data",
+        description: "Start the .NET backend for real market data",
+        variant: "destructive",
+        duration: 5000,
+      });
     };
 
     fetchRealData();
-  }, []);
+  }, [toast]);
 
-  // Update with realistic NSE data (simulated or real)
+  // Update with real data from backend
   useEffect(() => {
     if (!isLive) return;
 
     const interval = setInterval(async () => {
       if (useRealData) {
-        // Try to fetch real data
+        // Fetch real data from .NET backend
         try {
-          const response = await fetch('/api/nse-live-data?type=index');
+          const API_BASE = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000';
+          const response = await fetch(`${API_BASE}/api/market-data/indices`);
+          
           if (response.ok) {
             const result = await response.json();
-            if (result.success && result.data) {
-              setIndices(prev => prev.map(index => {
-                if (index.name === 'Nifty 50') {
-                  return {
-                    ...index,
-                    currentValue: result.data.value,
-                    change: result.data.change,
-                    changePercent: result.data.changePercent,
-                    lastUpdate: new Date()
-                  };
-                }
-                return updateIndexValue(index);
+            if (result.success && result.data && result.data.length > 0) {
+              const mappedIndices = result.data.map((index: any) => ({
+                name: index.name,
+                baseValue: index.currentValue,
+                currentValue: index.currentValue,
+                change: index.change,
+                changePercent: index.changePercent,
+                high: index.high,
+                low: index.low,
+                open: index.open,
+                previousClose: index.previousClose,
+                lastUpdate: new Date(index.lastUpdate)
               }));
+              
+              setIndices(mappedIndices);
               setLastRefresh(new Date());
+              setMarketStatus(getMarketStatus());
               return;
             }
           }
         } catch (error) {
-          console.log('API fetch failed, using simulated data');
+          console.log('API fetch failed, switching to simulated data');
           setUseRealData(false);
         }
       }
       
-      // Simulated data update
+      // Simulated data update (fallback)
       const randomIndex = Math.floor(Math.random() * indices.length);
       
       setIndices(prev => prev.map((index, idx) => {

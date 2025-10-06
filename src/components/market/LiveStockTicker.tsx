@@ -13,25 +13,79 @@ const LiveStockTicker = () => {
   const [stocks, setStocks] = useState<TickerStock[]>([]);
   const [isPaused, setIsPaused] = useState(false);
 
-  // Initialize with top stocks
+  // Fetch real stock data from backend
   useEffect(() => {
-    const niftyStocks = getNifty50Stocks().slice(0, 20); // Top 20 stocks
-    const initialStocks = niftyStocks.map(stock => ({
-      symbol: stock.symbol,
-      price: Math.random() * 5000 + 100,
-      change: (Math.random() - 0.5) * 100,
-      changePercent: (Math.random() - 0.5) * 5
-    }));
-    setStocks(initialStocks);
+    const fetchRealData = async () => {
+      try {
+        const niftyStocks = getNifty50Stocks().slice(0, 15); // Top 15 stocks
+        const symbols = niftyStocks.map(s => s.symbol).join(',');
+        
+        const API_BASE = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000';
+        const response = await fetch(`${API_BASE}/api/market-data/quotes?symbols=${symbols}`);
+        
+        if (response.ok) {
+          const result = await response.json();
+          if (result.success && result.data && result.data.length > 0) {
+            const tickerStocks = result.data.map((quote: any) => ({
+              symbol: quote.symbol,
+              price: quote.price,
+              change: quote.change,
+              changePercent: quote.changePercent
+            }));
+            setStocks(tickerStocks);
+            console.log('✅ Ticker using real stock data');
+            return;
+          }
+        }
+      } catch (error) {
+        console.log('⚠️ Ticker using simulated data');
+      }
+      
+      // Fallback to simulated data
+      const niftyStocks = getNifty50Stocks().slice(0, 15);
+      const initialStocks = niftyStocks.map(stock => ({
+        symbol: stock.symbol,
+        price: Math.random() * 5000 + 100,
+        change: (Math.random() - 0.5) * 100,
+        changePercent: (Math.random() - 0.5) * 5
+      }));
+      setStocks(initialStocks);
+    };
+
+    fetchRealData();
   }, []);
 
   // Update prices in real-time
   useEffect(() => {
-    if (isPaused) return;
+    if (isPaused || stocks.length === 0) return;
 
-    const interval = setInterval(() => {
+    const interval = setInterval(async () => {
+      // Try to fetch real data
+      try {
+        const symbols = stocks.map(s => s.symbol).join(',');
+        const API_BASE = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000';
+        const response = await fetch(`${API_BASE}/api/market-data/quotes?symbols=${symbols}`);
+        
+        if (response.ok) {
+          const result = await response.json();
+          if (result.success && result.data && result.data.length > 0) {
+            const tickerStocks = result.data.map((quote: any) => ({
+              symbol: quote.symbol,
+              price: quote.price,
+              change: quote.change,
+              changePercent: quote.changePercent
+            }));
+            setStocks(tickerStocks);
+            return;
+          }
+        }
+      } catch (error) {
+        // Fallback to simulated updates
+      }
+      
+      // Simulated data update (fallback)
       setStocks(prev => prev.map(stock => {
-        const volatility = stock.price * 0.001; // 0.1% volatility
+        const volatility = stock.price * 0.001;
         const priceChange = (Math.random() - 0.5) * volatility;
         const newPrice = stock.price + priceChange;
         const newChange = stock.change + priceChange;
@@ -44,10 +98,10 @@ const LiveStockTicker = () => {
           changePercent: newChangePercent
         };
       }));
-    }, 2000); // Update every 2 seconds
+    }, 3000); // Update every 3 seconds
 
     return () => clearInterval(interval);
-  }, [isPaused]);
+  }, [isPaused, stocks.length]);
 
   return (
     <div 
