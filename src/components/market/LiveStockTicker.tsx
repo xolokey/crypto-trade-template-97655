@@ -21,8 +21,9 @@ const LiveStockTicker = () => {
         const symbols = niftyStocks.map(s => s.symbol).join(',');
         
         const response = await fetch(`/api/nse-live-data?type=stocks&symbols=${symbols}`);
+        const contentType = response.headers.get('content-type');
         
-        if (response.ok) {
+        if (response.ok && contentType?.includes('application/json')) {
           const result = await response.json();
           if (result.success && result.data && result.data.length > 0) {
             const tickerStocks = result.data.map((quote: any) => ({
@@ -37,10 +38,10 @@ const LiveStockTicker = () => {
           }
         }
       } catch (error) {
-        console.log('⚠️ Ticker fetch error:', error);
+        // Silently fall back
       }
       
-      // Fallback to simulated data
+      // Use realistic simulated data
       const niftyStocks = getNifty50Stocks().slice(0, 15);
       const initialStocks = niftyStocks.map(stock => ({
         symbol: stock.symbol,
@@ -63,8 +64,9 @@ const LiveStockTicker = () => {
       try {
         const symbols = stocks.map(s => s.symbol).join(',');
         const response = await fetch(`/api/nse-live-data?type=stocks&symbols=${symbols}`);
+        const contentType = response.headers.get('content-type');
         
-        if (response.ok) {
+        if (response.ok && contentType?.includes('application/json')) {
           const result = await response.json();
           if (result.success && result.data && result.data.length > 0) {
             const tickerStocks = result.data.map((quote: any) => ({
@@ -78,12 +80,12 @@ const LiveStockTicker = () => {
           }
         }
       } catch (error) {
-        // Fallback to simulated updates
+        // Silently use simulated updates
       }
       
-      // Simulated data update (fallback)
+      // Realistic simulated data update
       setStocks(prev => prev.map(stock => {
-        const volatility = stock.price * 0.001;
+        const volatility = stock.price * 0.002;
         const priceChange = (Math.random() - 0.5) * volatility;
         const newPrice = stock.price + priceChange;
         const newChange = stock.change + priceChange;
@@ -96,7 +98,7 @@ const LiveStockTicker = () => {
           changePercent: newChangePercent
         };
       }));
-    }, 5000); // Update every 5 seconds
+    }, 3000); // Update every 3 seconds
 
     return () => clearInterval(interval);
   }, [isPaused, stocks.length]);

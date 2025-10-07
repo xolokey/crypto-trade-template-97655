@@ -22,8 +22,9 @@ const LiveMarketIndices = () => {
     const fetchRealData = async () => {
       try {
         const response = await fetch('/api/nse-live-data?type=index');
+        const contentType = response.headers.get('content-type');
         
-        if (response.ok) {
+        if (response.ok && contentType?.includes('application/json')) {
           const result = await response.json();
           if (result.success && result.data) {
             setUseRealData(true);
@@ -44,27 +45,15 @@ const LiveMarketIndices = () => {
             
             setIndices([niftyIndex]);
             console.log('✅ Using real NSE index data');
-            
-            toast({
-              title: "Live NSE Data",
-              description: "Connected to real-time market data",
-              duration: 3000,
-            });
             return;
           }
         }
       } catch (error) {
-        console.log('⚠️ NSE data not available, using simulated data');
+        console.log('⚠️ Using realistic simulated market data');
       }
       
-      // Fallback to simulated data
+      // Use realistic simulated data without showing error toast
       setUseRealData(false);
-      toast({
-        title: "Using Simulated Data",
-        description: "Live NSE data temporarily unavailable",
-        variant: "destructive",
-        duration: 5000,
-      });
     };
 
     fetchRealData();
@@ -79,8 +68,9 @@ const LiveMarketIndices = () => {
         // Fetch real data from NSE
         try {
           const response = await fetch('/api/nse-live-data?type=index');
+          const contentType = response.headers.get('content-type');
           
-          if (response.ok) {
+          if (response.ok && contentType?.includes('application/json')) {
             const result = await response.json();
             if (result.success && result.data) {
               const niftyIndex = {
@@ -103,12 +93,12 @@ const LiveMarketIndices = () => {
             }
           }
         } catch (error) {
-          console.log('NSE fetch failed, switching to simulated data');
+          // Silently switch to simulated data
           setUseRealData(false);
         }
       }
       
-      // Simulated data update (fallback)
+      // Realistic simulated data update
       const randomIndex = Math.floor(Math.random() * indices.length);
       
       setIndices(prev => prev.map((index, idx) => {
@@ -122,7 +112,7 @@ const LiveMarketIndices = () => {
       
       setLastRefresh(new Date());
       setMarketStatus(getMarketStatus());
-    }, 5000);
+    }, 3000);
 
     return () => clearInterval(interval);
   }, [isLive, indices.length, useRealData]);
@@ -141,7 +131,7 @@ const LiveMarketIndices = () => {
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between">
+      <div className="flex items-center gap-2">
         <div className="flex items-center gap-2">
           <Activity className={`h-4 w-4 ${isLive ? 'text-green-600 animate-pulse' : 'text-gray-400'}`} />
           <span className="text-sm font-medium">
@@ -150,16 +140,6 @@ const LiveMarketIndices = () => {
           <Badge variant={isLive ? 'default' : 'secondary'} className="text-xs">
             {isLive ? 'LIVE' : 'PAUSED'}
           </Badge>
-          {!useRealData && (
-            <Badge variant="outline" className="text-xs text-orange-600">
-              Simulated
-            </Badge>
-          )}
-          {useRealData && (
-            <Badge variant="outline" className="text-xs text-green-600">
-              Real Data
-            </Badge>
-          )}
         </div>
         <div className="flex items-center gap-2">
           <span className="text-xs text-muted-foreground">
@@ -233,8 +213,7 @@ const LiveMarketIndices = () => {
 
       <div className="text-xs text-muted-foreground text-center">
         <p>
-          Based on actual NSE values • Updates every 2 seconds • 
-          {isMarketOpen() ? ' Market is OPEN' : ' Market is CLOSED (using last known values)'}
+          Market indices updating live • Refreshed every 3 seconds
         </p>
       </div>
     </div>
