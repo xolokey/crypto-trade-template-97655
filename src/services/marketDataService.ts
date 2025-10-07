@@ -7,8 +7,8 @@ const API_BASE = '';
 
 // Retry configuration for API calls
 const RETRY_OPTIONS = {
-  maxRetries: 3,
-  initialDelay: 1000,
+  maxRetries: 2,
+  initialDelay: 500,
   onRetry: (attempt: number, error: Error) => {
     console.log(`Retrying API call (attempt ${attempt}):`, error.message);
   }
@@ -52,20 +52,19 @@ class MarketDataService {
         return cached;
       }
 
-      // Call backend API with retry logic
-      const result: MarketDataResponse = await fetchJsonWithRetry(
-        `${API_BASE}/api/market-data/quote/${symbol}`,
-        {
-          headers: {
-            'Content-Type': 'application/json',
-          },
-        },
-        RETRY_OPTIONS
-      );
+      // Use NSE live data endpoint
+      const response = await fetch(`${API_BASE}/api/nse-live-data?type=stock&symbol=${symbol}`);
+      
+      if (!response.ok) {
+        console.warn(`API returned ${response.status} for ${symbol}`);
+        return null;
+      }
+
+      const result: MarketDataResponse = await response.json();
       
       if (result.success && result.data) {
         this.setCache(symbol, result.data);
-        console.log(`✅ Real data fetched for ${symbol} from ${result.source || 'API'}`);
+        console.log(`✅ Real data fetched for ${symbol}`);
         return result.data;
       }
 
@@ -84,15 +83,14 @@ class MarketDataService {
   async getMultipleQuotes(symbols: string[]): Promise<StockQuote[]> {
     try {
       const symbolsParam = symbols.join(',');
-      const result: MarketDataResponse = await fetchJsonWithRetry(
-        `${API_BASE}/api/market-data/quotes?symbols=${symbolsParam}`,
-        {
-          headers: {
-            'Content-Type': 'application/json',
-          },
-        },
-        RETRY_OPTIONS
-      );
+      const response = await fetch(`${API_BASE}/api/nse-live-data?type=stocks&symbols=${symbolsParam}`);
+      
+      if (!response.ok) {
+        console.warn(`API returned ${response.status} for multiple quotes`);
+        return [];
+      }
+
+      const result: MarketDataResponse = await response.json();
       
       if (result.success && Array.isArray(result.data)) {
         // Cache each result

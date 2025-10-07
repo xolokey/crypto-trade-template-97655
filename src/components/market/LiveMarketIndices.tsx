@@ -17,52 +17,51 @@ const LiveMarketIndices = () => {
   const [flashingIndex, setFlashingIndex] = useState<string | null>(null);
   const [marketStatus, setMarketStatus] = useState(getMarketStatus());
 
-  // Fetch real data from .NET backend
+  // Fetch real data from NSE
   useEffect(() => {
     const fetchRealData = async () => {
       try {
-        const API_BASE = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000';
-        const response = await fetch(`${API_BASE}/api/market-data/indices`);
+        const response = await fetch('/api/nse-live-data?type=index');
         
         if (response.ok) {
           const result = await response.json();
-          if (result.success && result.data && result.data.length > 0) {
+          if (result.success && result.data) {
             setUseRealData(true);
             
-            // Map backend data to our format
-            const mappedIndices = result.data.map((index: any) => ({
-              name: index.name,
-              baseValue: index.currentValue,
-              currentValue: index.currentValue,
-              change: index.change,
-              changePercent: index.changePercent,
-              high: index.high,
-              low: index.low,
-              open: index.open,
-              previousClose: index.previousClose,
-              lastUpdate: new Date(index.lastUpdate)
-            }));
+            // Map NSE data to our format
+            const niftyIndex = {
+              name: result.data.name,
+              baseValue: result.data.value,
+              currentValue: result.data.value,
+              change: result.data.change,
+              changePercent: result.data.changePercent,
+              high: result.data.high,
+              low: result.data.low,
+              open: result.data.open,
+              previousClose: result.data.previousClose,
+              lastUpdate: new Date()
+            };
             
-            setIndices(mappedIndices);
-            console.log('✅ Using real market indices from backend');
+            setIndices([niftyIndex]);
+            console.log('✅ Using real NSE index data');
             
             toast({
-              title: "Real Data Connected",
-              description: `Fetched ${result.data.length} live market indices`,
+              title: "Live NSE Data",
+              description: "Connected to real-time market data",
               duration: 3000,
             });
             return;
           }
         }
       } catch (error) {
-        console.log('⚠️ Backend API not available, using simulated data');
+        console.log('⚠️ NSE data not available, using simulated data');
       }
       
       // Fallback to simulated data
       setUseRealData(false);
       toast({
         title: "Using Simulated Data",
-        description: "Start the .NET backend for real market data",
+        description: "Live NSE data temporarily unavailable",
         variant: "destructive",
         duration: 5000,
       });
@@ -77,35 +76,34 @@ const LiveMarketIndices = () => {
 
     const interval = setInterval(async () => {
       if (useRealData) {
-        // Fetch real data from .NET backend
+        // Fetch real data from NSE
         try {
-          const API_BASE = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000';
-          const response = await fetch(`${API_BASE}/api/market-data/indices`);
+          const response = await fetch('/api/nse-live-data?type=index');
           
           if (response.ok) {
             const result = await response.json();
-            if (result.success && result.data && result.data.length > 0) {
-              const mappedIndices = result.data.map((index: any) => ({
-                name: index.name,
-                baseValue: index.currentValue,
-                currentValue: index.currentValue,
-                change: index.change,
-                changePercent: index.changePercent,
-                high: index.high,
-                low: index.low,
-                open: index.open,
-                previousClose: index.previousClose,
-                lastUpdate: new Date(index.lastUpdate)
-              }));
+            if (result.success && result.data) {
+              const niftyIndex = {
+                name: result.data.name,
+                baseValue: result.data.value,
+                currentValue: result.data.value,
+                change: result.data.change,
+                changePercent: result.data.changePercent,
+                high: result.data.high,
+                low: result.data.low,
+                open: result.data.open,
+                previousClose: result.data.previousClose,
+                lastUpdate: new Date()
+              };
               
-              setIndices(mappedIndices);
+              setIndices([niftyIndex]);
               setLastRefresh(new Date());
               setMarketStatus(getMarketStatus());
               return;
             }
           }
         } catch (error) {
-          console.log('API fetch failed, switching to simulated data');
+          console.log('NSE fetch failed, switching to simulated data');
           setUseRealData(false);
         }
       }
@@ -124,7 +122,7 @@ const LiveMarketIndices = () => {
       
       setLastRefresh(new Date());
       setMarketStatus(getMarketStatus());
-    }, 2000);
+    }, 5000);
 
     return () => clearInterval(interval);
   }, [isLive, indices.length, useRealData]);

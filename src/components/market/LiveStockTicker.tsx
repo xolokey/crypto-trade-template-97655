@@ -13,15 +13,14 @@ const LiveStockTicker = () => {
   const [stocks, setStocks] = useState<TickerStock[]>([]);
   const [isPaused, setIsPaused] = useState(false);
 
-  // Fetch real stock data from backend
+  // Fetch real stock data from NSE
   useEffect(() => {
     const fetchRealData = async () => {
       try {
         const niftyStocks = getNifty50Stocks().slice(0, 15); // Top 15 stocks
         const symbols = niftyStocks.map(s => s.symbol).join(',');
         
-        const API_BASE = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000';
-        const response = await fetch(`${API_BASE}/api/market-data/quotes?symbols=${symbols}`);
+        const response = await fetch(`/api/nse-live-data?type=stocks&symbols=${symbols}`);
         
         if (response.ok) {
           const result = await response.json();
@@ -33,12 +32,12 @@ const LiveStockTicker = () => {
               changePercent: quote.changePercent
             }));
             setStocks(tickerStocks);
-            console.log('✅ Ticker using real stock data');
+            console.log('✅ Ticker using real NSE data');
             return;
           }
         }
       } catch (error) {
-        console.log('⚠️ Ticker using simulated data');
+        console.log('⚠️ Ticker fetch error:', error);
       }
       
       // Fallback to simulated data
@@ -60,11 +59,10 @@ const LiveStockTicker = () => {
     if (isPaused || stocks.length === 0) return;
 
     const interval = setInterval(async () => {
-      // Try to fetch real data
+      // Try to fetch real NSE data
       try {
         const symbols = stocks.map(s => s.symbol).join(',');
-        const API_BASE = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000';
-        const response = await fetch(`${API_BASE}/api/market-data/quotes?symbols=${symbols}`);
+        const response = await fetch(`/api/nse-live-data?type=stocks&symbols=${symbols}`);
         
         if (response.ok) {
           const result = await response.json();
@@ -98,7 +96,7 @@ const LiveStockTicker = () => {
           changePercent: newChangePercent
         };
       }));
-    }, 3000); // Update every 3 seconds
+    }, 5000); // Update every 5 seconds
 
     return () => clearInterval(interval);
   }, [isPaused, stocks.length]);
