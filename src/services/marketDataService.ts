@@ -2,9 +2,8 @@
 // Uses backend API proxies to avoid CORS issues
 import { fetchJsonWithRetry, fetchWithRetryHttp } from '@/utils/fetchWithRetry';
 
-// Use environment variable or default to backend
-const API_BASE = import.meta.env.VITE_API_BASE_URL || 
-  (import.meta.env.PROD ? '' : 'http://localhost:5000'); // .NET backend default
+// Use Vercel serverless function for NSE data
+const API_BASE = '';
 
 // Retry configuration for API calls
 const RETRY_OPTIONS = {

@@ -27,6 +27,7 @@ import DatabaseSetupBanner from '@/components/setup/DatabaseSetupBanner';
 import { SeedDatabaseButton } from '@/components/setup/SeedDatabaseButton';
 import LiveMarketIndices from '@/components/market/LiveMarketIndices';
 import LiveStockTicker from '@/components/market/LiveStockTicker';
+import { LiveIndexCard } from '@/components/market/LiveIndexCard';
 import { isGeminiAvailable } from '@/lib/gemini';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { useWatchlist } from '@/hooks/useWatchlist';
@@ -243,6 +244,9 @@ const AIEnhancedDashboard = () => {
             </div>
           </CardHeader>
           <CardContent className="space-y-4">
+            {/* Live NSE Index */}
+            <LiveIndexCard />
+
             {/* Live Stock Ticker */}
             <LiveStockTicker />
 
