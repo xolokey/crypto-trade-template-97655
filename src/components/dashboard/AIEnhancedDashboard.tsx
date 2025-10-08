@@ -13,7 +13,8 @@ import {
   RefreshCw,
   AlertTriangle,
   Search,
-  Plus
+  Plus,
+  LineChart
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { User } from '@supabase/supabase-js';
@@ -34,6 +35,8 @@ import { useWatchlist } from '@/hooks/useWatchlist';
 import { usePortfolio } from '@/hooks/usePortfolio';
 import { NSEStock } from '@/data/nseStocks';
 import { env } from '@/config/env';
+import PortfolioAnalytics from './PortfolioAnalytics';
+import StockChart from '@/components/charts/StockChart';
 
 // Mock data - replace with real data from your API
 const mockStocks = [
@@ -181,8 +184,8 @@ const AIEnhancedDashboard = () => {
   ];
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background via-background to-muted/20 p-6">
-      <div className="max-w-7xl mx-auto space-y-6">
+    <div className="min-h-screen bg-gradient-to-br from-background via-background to-muted/20 p-4 md:p-6">
+      <div className="max-w-7xl mx-auto space-y-6 fade-in-up">
         {/* Header */}
         <div className="flex items-center justify-between">
           <div>
@@ -227,7 +230,7 @@ const AIEnhancedDashboard = () => {
         )}
 
         {/* Live Market Data Section */}
-        <Card className="border-primary/20 bg-gradient-to-br from-primary/5 to-transparent">
+        <Card className="border-primary/20 bg-gradient-to-br from-primary/5 to-transparent hover-lift">
           <CardHeader className="pb-3">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
@@ -240,7 +243,12 @@ const AIEnhancedDashboard = () => {
                   LIVE
                 </Badge>
               </div>
-              <p className="text-sm text-muted-foreground">Updates every 2 seconds</p>
+              <div className="flex items-center gap-2">
+                <p className="text-sm text-muted-foreground hidden sm:block">Updates every 3s</p>
+                <Button variant="ghost" size="sm" onClick={() => window.location.reload()}>
+                  <RefreshCw className="h-4 w-4" />
+                </Button>
+              </div>
             </div>
           </CardHeader>
           <CardContent className="space-y-4">
@@ -260,22 +268,26 @@ const AIEnhancedDashboard = () => {
           {/* Left Column - Search, Watchlist and Portfolio */}
           <div className="lg:col-span-2 space-y-6">
             <Tabs value={activeTab} onValueChange={setActiveTab}>
-              <TabsList className="grid w-full grid-cols-4">
-                <TabsTrigger value="search">
+              <TabsList className="grid w-full grid-cols-5 glass">
+                <TabsTrigger value="search" className="data-[state=active]:bg-primary/20">
                   <Search className="h-4 w-4 mr-2" />
-                  Search
+                  <span className="hidden sm:inline">Search</span>
                 </TabsTrigger>
-                <TabsTrigger value="watchlist">
+                <TabsTrigger value="watchlist" className="data-[state=active]:bg-primary/20">
                   <Star className="h-4 w-4 mr-2" />
-                  Watchlist ({watchlist.length})
+                  <span className="hidden sm:inline">Watchlist</span> ({watchlist.length})
                 </TabsTrigger>
-                <TabsTrigger value="portfolio">
+                <TabsTrigger value="portfolio" className="data-[state=active]:bg-primary/20">
                   <Wallet className="h-4 w-4 mr-2" />
-                  Portfolio ({portfolio.length})
+                  <span className="hidden sm:inline">Portfolio</span> ({portfolio.length})
                 </TabsTrigger>
-                <TabsTrigger value="insights">
+                <TabsTrigger value="analytics" className="data-[state=active]:bg-primary/20">
+                  <LineChart className="h-4 w-4 mr-2" />
+                  <span className="hidden sm:inline">Analytics</span>
+                </TabsTrigger>
+                <TabsTrigger value="insights" className="data-[state=active]:bg-primary/20">
                   <Brain className="h-4 w-4 mr-2" />
-                  AI Insights
+                  <span className="hidden sm:inline">AI</span>
                 </TabsTrigger>
               </TabsList>
 
@@ -353,77 +365,82 @@ const AIEnhancedDashboard = () => {
               <TabsContent value="portfolio" className="space-y-4">
                 {portfolioLoading ? (
                   <div className="text-center py-12 text-muted-foreground">
-                    Loading portfolio...
+                    <div className="flex items-center justify-center gap-2">
+                      <RefreshCw className="h-5 w-5 animate-spin" />
+                      Loading portfolio...
+                    </div>
                   </div>
                 ) : portfolio.length > 0 ? (
-                  <div className="space-y-6">
-                    {/* Portfolio Summary */}
-                    <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                      <Card>
-                        <CardContent className="p-4">
-                          <div className="text-sm text-muted-foreground">Total Invested</div>
-                          <div className="text-2xl font-bold">
-                            {portfolioMetrics.totalInvested.toLocaleString('en-IN', {
-                              style: 'currency',
-                              currency: 'INR',
-                              maximumFractionDigits: 0
-                            })}
+                  <div className="space-y-4">
+                    {/* Quick Portfolio Summary */}
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                      <Card className="card-elevated hover-lift">
+                        <CardContent className="p-3">
+                          <div className="text-xs text-muted-foreground">Invested</div>
+                          <div className="text-lg font-bold">
+                            ₹{(portfolioMetrics.totalInvested / 1000).toFixed(1)}K
                           </div>
                         </CardContent>
                       </Card>
-                      <Card>
-                        <CardContent className="p-4">
-                          <div className="text-sm text-muted-foreground">Current Value</div>
-                          <div className="text-2xl font-bold">
-                            {portfolioMetrics.currentValue.toLocaleString('en-IN', {
-                              style: 'currency',
-                              currency: 'INR',
-                              maximumFractionDigits: 0
-                            })}
+                      <Card className="card-elevated hover-lift">
+                        <CardContent className="p-3">
+                          <div className="text-xs text-muted-foreground">Current</div>
+                          <div className="text-lg font-bold">
+                            ₹{(portfolioMetrics.currentValue / 1000).toFixed(1)}K
                           </div>
                         </CardContent>
                       </Card>
-                      <Card>
-                        <CardContent className="p-4">
-                          <div className="text-sm text-muted-foreground">Total P&L</div>
-                          <div className={`text-2xl font-bold ${
-                            portfolioMetrics.totalGainLoss >= 0 ? 'text-green-600' : 'text-red-600'
+                      <Card className="card-elevated hover-lift">
+                        <CardContent className="p-3">
+                          <div className="text-xs text-muted-foreground">P&L</div>
+                          <div className={`text-lg font-bold ${
+                            portfolioMetrics.totalGainLoss >= 0 ? 'text-green-500' : 'text-red-500'
                           }`}>
                             {portfolioMetrics.totalGainLoss >= 0 ? '+' : ''}
-                            {portfolioMetrics.totalGainLoss.toLocaleString('en-IN', {
-                              style: 'currency',
-                              currency: 'INR',
-                              maximumFractionDigits: 0
-                            })}
+                            ₹{(Math.abs(portfolioMetrics.totalGainLoss) / 1000).toFixed(1)}K
                           </div>
                         </CardContent>
                       </Card>
-                      <Card>
-                        <CardContent className="p-4">
-                          <div className="text-sm text-muted-foreground">Holdings</div>
-                          <div className="text-2xl font-bold">{portfolioMetrics.totalStocks}</div>
+                      <Card className="card-elevated hover-lift">
+                        <CardContent className="p-3">
+                          <div className="text-xs text-muted-foreground">Stocks</div>
+                          <div className="text-lg font-bold">{portfolioMetrics.totalStocks}</div>
                         </CardContent>
                       </Card>
                     </div>
 
                     {/* Portfolio Holdings */}
-                    <div className="space-y-4">
-                      {portfolio.map((item) => (
-                        <Card key={item.id}>
+                    <div className="grid grid-cols-1 gap-3">
+                      {portfolio.map((item, index) => (
+                        <Card key={item.id} className="card-elevated hover-lift scale-in" style={{ animationDelay: `${index * 0.05}s` }}>
                           <CardContent className="p-4">
                             <div className="flex items-center justify-between">
-                              <div>
-                                <h3 className="font-semibold">{item.stock_symbol}</h3>
+                              <div className="flex-1">
+                                <div className="flex items-center gap-2 mb-1">
+                                  <h3 className="font-semibold text-lg">{item.stock_symbol}</h3>
+                                  <Badge variant="outline" className="text-xs">{item.sector}</Badge>
+                                </div>
                                 <p className="text-sm text-muted-foreground">{item.stock_name}</p>
-                                <Badge variant="outline" className="mt-1">{item.sector}</Badge>
+                                <p className="text-xs text-muted-foreground mt-1">
+                                  {item.quantity} shares @ ₹{item.average_price.toLocaleString()}
+                                </p>
                               </div>
                               <div className="text-right">
-                                <div className="text-sm text-muted-foreground">
-                                  {item.quantity} shares @ ₹{item.average_price}
+                                <div className="font-semibold text-lg">
+                                  ₹{item.total_invested.toLocaleString('en-IN', { maximumFractionDigits: 0 })}
                                 </div>
-                                <div className="font-semibold">
-                                  ₹{item.total_invested.toLocaleString()}
-                                </div>
+                                <Button 
+                                  variant="ghost" 
+                                  size="sm"
+                                  onClick={() => {
+                                    setSelectedStock({ symbol: item.stock_symbol, name: item.stock_name });
+                                    setShowAIPanel(true);
+                                  }}
+                                  className="mt-2"
+                                >
+                                  <LineChart className="h-3 w-3 mr-1" />
+                                  View Chart
+                                </Button>
                               </div>
                             </div>
                           </CardContent>
@@ -436,6 +453,26 @@ const AIEnhancedDashboard = () => {
                     <Wallet className="h-12 w-12 mx-auto mb-4 opacity-50" />
                     <p>No stocks in your portfolio</p>
                     <p className="text-sm">Add stocks to your portfolio to track your investments</p>
+                    <Button 
+                      variant="outline" 
+                      className="mt-4"
+                      onClick={() => setActiveTab('search')}
+                    >
+                      <Plus className="h-4 w-4 mr-2" />
+                      Add Stocks
+                    </Button>
+                  </div>
+                )}
+              </TabsContent>
+
+              <TabsContent value="analytics" className="space-y-4">
+                {portfolio.length > 0 ? (
+                  <PortfolioAnalytics portfolio={portfolio} metrics={portfolioMetrics} />
+                ) : (
+                  <div className="text-center py-12 text-muted-foreground">
+                    <BarChart3 className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                    <p>No portfolio data available</p>
+                    <p className="text-sm">Add stocks to your portfolio to see analytics</p>
                     <Button 
                       variant="outline" 
                       className="mt-4"
@@ -463,10 +500,56 @@ const AIEnhancedDashboard = () => {
             </Tabs>
           </div>
 
-          {/* Right Column - AI Analysis */}
-          <div className="space-y-6">
+          {/* Right Column - AI Analysis & Charts */}
+          <div className="space-y-6 scale-in" style={{ animationDelay: '0.2s' }}>
             {/* API Status Indicator (Dev Only) */}
             {env.IS_DEVELOPMENT && <APIStatusIndicator />}
+            
+            {/* Featured Stock Chart */}
+            {selectedStock && (
+              <StockChart 
+                symbol={selectedStock.symbol} 
+                name={selectedStock.name}
+              />
+            )}
+
+            {/* Market Stats */}
+            <Card className="glass border-primary/20 hover-lift">
+              <CardHeader className="pb-3">
+                <CardTitle className="text-lg flex items-center gap-2">
+                  <TrendingUp className="h-5 w-5 text-primary" />
+                  Market Overview
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                {marketStats.map((stat, index) => {
+                  const Icon = stat.icon;
+                  return (
+                    <div 
+                      key={index} 
+                      className="flex items-center justify-between p-3 rounded-lg glass-hover fade-in-up"
+                      style={{ animationDelay: `${index * 0.1}s` }}
+                    >
+                      <div className="flex items-center gap-3">
+                        <div className="p-2 rounded-lg bg-primary/10 pulse-glow">
+                          <Icon className="h-5 w-5 text-primary" />
+                        </div>
+                        <div>
+                          <p className="text-sm text-muted-foreground">{stat.label}</p>
+                          <p className="text-xl font-bold">{stat.value}</p>
+                        </div>
+                      </div>
+                      <Badge 
+                        variant={stat.isPositive ? "default" : "destructive"} 
+                        className="text-sm"
+                      >
+                        {stat.change}
+                      </Badge>
+                    </div>
+                  );
+                })}
+              </CardContent>
+            </Card>
             
             {showAIPanel && selectedStock ? (
               <AIAnalysisPanel
@@ -477,10 +560,10 @@ const AIEnhancedDashboard = () => {
                 ]}
               />
             ) : (
-              <Card>
+              <Card className="card-elevated">
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
-                    <Brain className="h-5 w-5" />
+                    <Brain className="h-5 w-5 text-primary" />
                     AI Analysis
                   </CardTitle>
                   <CardDescription>
@@ -490,7 +573,7 @@ const AIEnhancedDashboard = () => {
                 <CardContent>
                   <div className="text-center py-8 text-muted-foreground">
                     <Brain className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                    <p>Click on any stock card to view AI analysis</p>
+                    <p>Click on any stock to view detailed AI analysis</p>
                   </div>
                 </CardContent>
               </Card>
