@@ -12,7 +12,6 @@ import { Label } from '@/components/ui/label';
 import { 
   LineChart, 
   Line, 
-  CandlestickChart,
   XAxis, 
   YAxis, 
   CartesianGrid, 

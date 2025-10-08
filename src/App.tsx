@@ -8,6 +8,7 @@ import Auth from "./pages/Auth";
 import Dashboard from "./pages/Dashboard";
 import StockDetail from "./pages/StockDetail";
 import LiveMarket from "./pages/LiveMarket";
+import EnhancementsDemo from "./pages/EnhancementsDemo";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -41,6 +42,7 @@ const App = () => (
             <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/stock/:id" element={<StockDetail />} />
             <Route path="/live-market" element={<LiveMarket />} />
+            <Route path="/demo" element={<EnhancementsDemo />} />
           </Routes>
         </BrowserRouter>
       </div>

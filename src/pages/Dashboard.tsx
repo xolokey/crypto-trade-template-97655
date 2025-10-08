@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { User } from "@supabase/supabase-js";
 import { Button } from "@/components/ui/button";
-import { LogOut, TrendingUp, Brain, BarChart3 } from "lucide-react";
+import { LogOut, TrendingUp, Brain, BarChart3, Search } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useStocks } from "@/hooks/useStocks";
 import { seedStocks } from "@/lib/seedStocks";
@@ -13,6 +13,7 @@ import { useRealTimeStock } from "@/hooks/useRealTimeStock";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import EnhancedAIDashboard from "@/components/dashboard/EnhancedAIDashboard";
 import EnhancedPerformanceMonitor from "@/components/monitoring/EnhancedPerformanceMonitor";
+import AdvancedStockScreener from "@/components/search/AdvancedStockScreener";
 
 export default function Dashboard() {
   const [user, setUser] = useState<User | null>(null);
@@ -110,6 +111,14 @@ export default function Dashboard() {
           </div>
           <div className="flex items-center gap-2">
             <Button 
+              onClick={() => navigate("/demo")} 
+              variant="default" 
+              size="sm" 
+              className="bg-gradient-to-r from-primary to-accent text-white"
+            >
+              🚀 New Features
+            </Button>
+            <Button 
               onClick={() => navigate("/live-market")} 
               variant="outline" 
               size="sm" 
@@ -132,7 +141,7 @@ export default function Dashboard() {
       {/* Enhanced Dashboard with Tabs */}
       <div className="container px-4 py-6">
         <Tabs defaultValue="overview" className="w-full">
-          <TabsList className="grid w-full grid-cols-3 mb-6">
+          <TabsList className="grid w-full grid-cols-4 mb-6">
             <TabsTrigger value="overview" className="flex items-center gap-2">
               <BarChart3 className="h-4 w-4" />
               Overview
@@ -140,6 +149,10 @@ export default function Dashboard() {
             <TabsTrigger value="ai-insights" className="flex items-center gap-2">
               <Brain className="h-4 w-4" />
               AI Insights
+            </TabsTrigger>
+            <TabsTrigger value="screener" className="flex items-center gap-2">
+              <Search className="h-4 w-4" />
+              Screener
             </TabsTrigger>
             <TabsTrigger value="analytics" className="flex items-center gap-2">
               <TrendingUp className="h-4 w-4" />
@@ -153,6 +166,10 @@ export default function Dashboard() {
           
           <TabsContent value="ai-insights">
             <EnhancedAIDashboard />
+          </TabsContent>
+          
+          <TabsContent value="screener">
+            <AdvancedStockScreener />
           </TabsContent>
           
           <TabsContent value="analytics">

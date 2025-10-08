@@ -27,7 +27,7 @@ import { enhancedAIService, MarketInsights, PricePrediction, SentimentAnalysis }
 import { useStocks } from '@/hooks/useStocks';
 import { useRealTimeStock } from '@/hooks/useRealTimeStock';
 import AdvancedTradingChart from '@/components/charts/AdvancedTradingChart';
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart as RechartsPieChart, Cell } from 'recharts';
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart as RechartsPieChart, Pie, Cell } from 'recharts';
 
 interface AIInsightCard {
   symbol: string;

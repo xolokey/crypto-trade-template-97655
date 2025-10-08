@@ -85,9 +85,9 @@ const Index = () => {
               size="lg" 
               variant="outline" 
               className="text-white border-white/20 hover:bg-white/10 text-lg px-8"
-              onClick={() => navigate("/dashboard")}
+              onClick={() => navigate("/demo")}
             >
-              View Live Dashboard 
+              🚀 View Enhancements Demo
               <ArrowRight className="ml-2 w-5 h-5" />
             </Button>
           </motion.div>

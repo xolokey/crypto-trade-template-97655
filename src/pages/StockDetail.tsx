@@ -6,6 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ArrowLeft, TrendingUp, TrendingDown, Star } from "lucide-react";
 import { StockChart } from "@/components/stocks/StockChart";
 import { AIInsights } from "@/components/stocks/AIInsights";
+import AdvancedTradingChart from "@/components/charts/AdvancedTradingChart";
 import { useToast } from "@/hooks/use-toast";
 
 interface Stock {
@@ -25,6 +26,32 @@ interface Stock {
   market_cap: number;
   pe_ratio: number;
 }
+
+// Generate sample OHLCV data for the chart
+const generateSampleData = (symbol: string, currentPrice: number) => {
+  const data = [];
+  const basePrice = currentPrice;
+  
+  for (let i = 30; i >= 0; i--) {
+    const date = new Date();
+    date.setDate(date.getDate() - i);
+    
+    const volatility = 0.02;
+    const change = (Math.random() - 0.5) * volatility;
+    const price = basePrice * (1 + change * (i / 30));
+    
+    data.push({
+      timestamp: date,
+      open: price * (1 + (Math.random() - 0.5) * 0.01),
+      high: price * (1 + Math.random() * 0.02),
+      low: price * (1 - Math.random() * 0.02),
+      close: price,
+      volume: Math.floor(Math.random() * 10000000)
+    });
+  }
+  
+  return data;
+};
 
 export default function StockDetail() {
   const { id } = useParams();
@@ -179,12 +206,16 @@ export default function StockDetail() {
           </Card>
         </div>
 
-        <Card className="mb-8">
-          <CardHeader><CardTitle>Price Chart</CardTitle></CardHeader>
-          <CardContent>
-            <StockChart stockId={stock.id} symbol={stock.symbol} />
-          </CardContent>
-        </Card>
+        <div className="mb-8">
+          <AdvancedTradingChart 
+            symbol={stock.symbol}
+            data={generateSampleData(stock.symbol, stock.current_price)}
+            realTimePrice={stock.current_price}
+            height={600}
+            showVolume={true}
+            showIndicators={true}
+          />
+        </div>
 
         <AIInsights 
           stockId={stock.id}
