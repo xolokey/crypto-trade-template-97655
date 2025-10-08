@@ -13,10 +13,12 @@
     "type-check": "tsc --noEmit",
     "analyze": "npx vite-bundle-analyzer",
     "validate": "node scripts/validate-build.js",
+    "validate:production": "node scripts/production-validation.js",
     "test": "vitest --run",
     "test:watch": "vitest",
     "test:ui": "vitest --ui",
-    "test:coverage": "vitest --coverage"
+    "test:coverage": "vitest --coverage",
+    "deploy:check": "npm run type-check && npm run build && npm run validate:production"
   },
   "dependencies": {
     "@geist-ui/core": "^2.3.8",
