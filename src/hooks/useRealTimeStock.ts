@@ -23,6 +23,12 @@ interface UseRealTimeStockReturn {
   connectionState: ConnectionState;
   lastUpdate: Date | null;
   latency: number;
+  performanceMetrics: {
+    messagesPerSecond: number;
+    averageLatency: number;
+    connectionUptime: number;
+    reconnectCount: number;
+  };
   refetch: () => Promise<void>;
 }
 
@@ -42,6 +48,12 @@ export function useRealTimeStock({
   const [connectionState, setConnectionState] = useState<ConnectionState>('CLOSED');
   const [lastUpdate, setLastUpdate] = useState<Date | null>(null);
   const [latency, setLatency] = useState(0);
+  const [performanceMetrics, setPerformanceMetrics] = useState({
+    messagesPerSecond: 0,
+    averageLatency: 0,
+    connectionUptime: 0,
+    reconnectCount: 0
+  });
   
   const pollingIntervalRef = useRef<NodeJS.Timeout | null>(null);
   const isMountedRef = useRef(true);
@@ -206,13 +218,19 @@ export function useRealTimeStock({
     }
   }, [symbol, enableWebSocket, fallbackToPolling, pollingInterval, fetchData, startPolling, stopPolling, onUpdate, onError]);
 
-  // Update latency from WebSocket service
+  // Update latency and performance metrics from WebSocket service
   useEffect(() => {
     if (wsServiceRef.current && isConnected) {
       const interval = setInterval(() => {
         const avgLatency = wsServiceRef.current?.getLatency() || 0;
         setLatency(avgLatency);
-      }, 5000);
+        
+        // Update performance metrics
+        if (wsServiceRef.current?.getPerformanceMetrics) {
+          const metrics = wsServiceRef.current.getPerformanceMetrics();
+          setPerformanceMetrics(metrics);
+        }
+      }, 2000); // Update every 2 seconds for better responsiveness
 
       return () => clearInterval(interval);
     }
@@ -234,6 +252,7 @@ export function useRealTimeStock({
     connectionState,
     lastUpdate,
     latency,
+    performanceMetrics,
     refetch: fetchData
   };
 }

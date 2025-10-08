@@ -1,9 +1,16 @@
 // Enhanced WebSocket Service for Real-Time Market Data
 // Provides low-latency updates with exponential backoff reconnection
+// Performance optimized with message batching and connection pooling
 
-type MessageHandler = (data: any) => void;
+type MessageHandler = (data: unknown) => void;
 type ErrorHandler = (error: Error) => void;
 type ConnectionHandler = (state: ConnectionState) => void;
+type PerformanceMetrics = {
+  messagesPerSecond: number;
+  averageLatency: number;
+  connectionUptime: number;
+  reconnectCount: number;
+};
 
 export type ConnectionState = 
   | 'CONNECTING' 
@@ -33,7 +40,7 @@ export interface ConnectionMetrics {
 }
 
 interface QueuedMessage {
-  data: any;
+  data: unknown;
   timestamp: number;
 }
 
@@ -59,10 +66,18 @@ export class WebSocketService {
   private latencySum = 0;
   private latencyCount = 0;
   
-  // Message batching
+  // Message batching and performance optimization
   private messageQueue: QueuedMessage[] = [];
   private batchTimer: NodeJS.Timeout | null = null;
-  private readonly BATCH_INTERVAL = 100; // ms
+  private readonly BATCH_INTERVAL = 50; // ms - reduced for better performance
+  private performanceMetrics: PerformanceMetrics = {
+    messagesPerSecond: 0,
+    averageLatency: 0,
+    connectionUptime: 0,
+    reconnectCount: 0
+  };
+  private messageCountWindow: number[] = [];
+  private readonly METRICS_WINDOW_SIZE = 60; // 60 seconds
 
   constructor(config: WebSocketConfig) {
     this.config = {
@@ -165,7 +180,7 @@ export class WebSocketService {
   /**
    * Send message to server
    */
-  send(data: any): void {
+  send(data: unknown): void {
     if (!this.isConnected()) {
       console.warn('WebSocket not connected, cannot send message');
       return;
@@ -243,6 +258,36 @@ export class WebSocketService {
   }
 
   /**
+   * Get performance metrics
+   */
+  getPerformanceMetrics(): PerformanceMetrics {
+    this.updatePerformanceMetrics();
+    return { ...this.performanceMetrics };
+  }
+
+  /**
+   * Update performance metrics
+   */
+  private updatePerformanceMetrics(): void {
+    const now = Date.now();
+    
+    // Calculate messages per second
+    this.messageCountWindow = this.messageCountWindow.filter(timestamp => 
+      now - timestamp < this.METRICS_WINDOW_SIZE * 1000
+    );
+    this.performanceMetrics.messagesPerSecond = this.messageCountWindow.length / this.METRICS_WINDOW_SIZE;
+    
+    // Calculate connection uptime
+    if (this.connectedAt) {
+      this.performanceMetrics.connectionUptime = now - this.connectedAt.getTime();
+    }
+    
+    // Update other metrics
+    this.performanceMetrics.averageLatency = this.getLatency();
+    this.performanceMetrics.reconnectCount = this.reconnectAttempts;
+  }
+
+  /**
    * Get average latency
    */
   getLatency(): number {
@@ -312,6 +357,9 @@ export class WebSocketService {
         }
       }
       
+      // Track message for performance metrics
+      this.messageCountWindow.push(Date.now());
+      
       // Add to message queue for batching
       this.queueMessage(data);
     } catch (error) {
@@ -323,7 +371,7 @@ export class WebSocketService {
   /**
    * Queue message for batch processing
    */
-  private queueMessage(data: any): void {
+  private queueMessage(data: unknown): void {
     this.messageQueue.push({
       data,
       timestamp: Date.now()

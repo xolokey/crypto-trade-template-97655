@@ -8,6 +8,12 @@ interface ConnectionStatusIndicatorProps {
   connectionState: ConnectionState;
   lastUpdate: Date | null;
   latency?: number;
+  performanceMetrics?: {
+    messagesPerSecond: number;
+    averageLatency: number;
+    connectionUptime: number;
+    reconnectCount: number;
+  };
   showDetails?: boolean;
   position?: 'top-right' | 'top-left' | 'bottom-right' | 'bottom-left';
 }
@@ -18,6 +24,7 @@ export function ConnectionStatusIndicator({
   connectionState,
   lastUpdate,
   latency = 0,
+  performanceMetrics,
   showDetails = true,
   position = 'top-right'
 }: ConnectionStatusIndicatorProps) {
@@ -221,6 +228,34 @@ export function ConnectionStatusIndicator({
                     {latency}ms
                   </span>
                 </div>
+              )}
+
+              {/* Performance Metrics */}
+              {performanceMetrics && isRealTime && (
+                <>
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs text-gray-500 dark:text-gray-400">Messages/sec</span>
+                    <span className="text-xs font-medium text-blue-600">
+                      {performanceMetrics.messagesPerSecond.toFixed(1)}
+                    </span>
+                  </div>
+                  
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs text-gray-500 dark:text-gray-400">Uptime</span>
+                    <span className="text-xs font-medium text-gray-700 dark:text-gray-300">
+                      {Math.floor(performanceMetrics.connectionUptime / 60000)}m
+                    </span>
+                  </div>
+
+                  {performanceMetrics.reconnectCount > 0 && (
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs text-gray-500 dark:text-gray-400">Reconnects</span>
+                      <span className="text-xs font-medium text-orange-600">
+                        {performanceMetrics.reconnectCount}
+                      </span>
+                    </div>
+                  )}
+                </>
               )}
 
               {/* Mode */}

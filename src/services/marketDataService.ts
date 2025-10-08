@@ -16,7 +16,7 @@ const RETRY_OPTIONS = {
 
 export interface MarketDataResponse {
   success: boolean;
-  data: any;
+  data: unknown;
   source?: string;
   timestamp: string;
   error?: string;
@@ -36,44 +36,87 @@ export interface StockQuote {
 }
 
 class MarketDataService {
-  private cache: Map<string, { data: any; timestamp: number }> = new Map();
+  private cache: Map<string, { data: unknown; timestamp: number; hitCount: number }> = new Map();
   private cacheTimeout = 10000; // 10 seconds
+  private requestQueue: Map<string, Promise<StockQuote | null>> = new Map(); // Prevent duplicate requests
+  private performanceMetrics = {
+    totalRequests: 0,
+    cacheHits: 0,
+    averageResponseTime: 0,
+    errorRate: 0,
+    lastRequestTime: 0
+  };
+  private responseTimes: number[] = [];
 
   /**
-   * Fetch single stock quote using backend proxy
-   * Now uses real backend API - NO MORE MOCK DATA!
+   * Fetch single stock quote using backend proxy with enhanced performance
    */
   async getStockQuote(symbol: string): Promise<StockQuote | null> {
+    const startTime = performance.now();
+    this.performanceMetrics.totalRequests++;
+    
     try {
       // Check cache first
       const cached = this.getFromCache(symbol);
       if (cached) {
-        console.log(`📦 Cache hit for ${symbol}`);
-        return cached;
+        this.performanceMetrics.cacheHits++;
+        console.log(`📦 Cache hit for ${symbol} (${cached.hitCount} hits)`);
+        return cached.data;
       }
 
-      // Use NSE live data endpoint
-      const response = await fetch(`${API_BASE}/api/nse-live-data?type=stock&symbol=${symbol}`);
-      
-      if (!response.ok) {
-        console.warn(`API returned ${response.status} for ${symbol}`);
-        return null;
+      // Check if request is already in progress
+      const existingRequest = this.requestQueue.get(symbol);
+      if (existingRequest) {
+        console.log(`⏳ Request already in progress for ${symbol}`);
+        return await existingRequest;
       }
 
-      const result: MarketDataResponse = await response.json();
-      
-      if (result.success && result.data) {
-        this.setCache(symbol, result.data);
-        console.log(`✅ Real data fetched for ${symbol}`);
-        return result.data;
-      }
+      // Create new request
+      const requestPromise = this.fetchStockData(symbol);
+      this.requestQueue.set(symbol, requestPromise);
 
-      console.warn(`No data returned for ${symbol}`);
-      return null;
+      try {
+        const result = await requestPromise;
+        const responseTime = performance.now() - startTime;
+        this.updatePerformanceMetrics(responseTime, true);
+        
+        if (result) {
+          this.setCache(symbol, result);
+          console.log(`✅ Real data fetched for ${symbol} in ${responseTime.toFixed(2)}ms`);
+        }
+        
+        return result;
+      } finally {
+        this.requestQueue.delete(symbol);
+      }
     } catch (error) {
+      const responseTime = performance.now() - startTime;
+      this.updatePerformanceMetrics(responseTime, false);
       console.error(`❌ Error fetching ${symbol}:`, error);
       return null;
     }
+  }
+
+  /**
+   * Internal method to fetch stock data
+   */
+  private async fetchStockData(symbol: string): Promise<StockQuote | null> {
+    // Use NSE live data endpoint
+    const response = await fetch(`${API_BASE}/api/nse-live-data?type=stock&symbol=${symbol}`);
+    
+    if (!response.ok) {
+      console.warn(`API returned ${response.status} for ${symbol}`);
+      return null;
+    }
+
+    const result: MarketDataResponse = await response.json();
+    
+    if (result.success && result.data) {
+      return result.data;
+    }
+
+    console.warn(`No data returned for ${symbol}`);
+    return null;
   }
 
   /**
@@ -159,7 +202,7 @@ class MarketDataService {
   /**
    * Fetch NSE data (via proxy)
    */
-  async getNSEData(type: 'index' | 'stock', symbol?: string): Promise<any> {
+  async getNSEData(type: 'index' | 'stock', symbol?: string): Promise<unknown> {
     try {
       let url = `${API_BASE}/api/nse-live-data?type=${type}`;
       if (symbol) url += `&symbol=${symbol}`;
@@ -184,7 +227,7 @@ class MarketDataService {
   /**
    * Cache management
    */
-  private getFromCache(key: string): any | null {
+  private getFromCache(key: string): { data: StockQuote; hitCount: number } | null {
     const cached = this.cache.get(key);
     if (!cached) return null;
 
@@ -194,14 +237,53 @@ class MarketDataService {
       return null;
     }
 
-    return cached.data;
+    // Increment hit count
+    cached.hitCount++;
+    return { data: cached.data, hitCount: cached.hitCount };
   }
 
-  private setCache(key: string, data: any): void {
+  private setCache(key: string, data: StockQuote): void {
     this.cache.set(key, {
       data,
-      timestamp: Date.now()
+      timestamp: Date.now(),
+      hitCount: 0
     });
+  }
+
+  /**
+   * Update performance metrics
+   */
+  private updatePerformanceMetrics(responseTime: number, success: boolean): void {
+    this.responseTimes.push(responseTime);
+    
+    // Keep only last 100 response times
+    if (this.responseTimes.length > 100) {
+      this.responseTimes.shift();
+    }
+    
+    // Calculate average response time
+    this.performanceMetrics.averageResponseTime = 
+      this.responseTimes.reduce((sum, time) => sum + time, 0) / this.responseTimes.length;
+    
+    // Update error rate
+    if (!success) {
+      this.performanceMetrics.errorRate = 
+        (this.performanceMetrics.errorRate * (this.performanceMetrics.totalRequests - 1) + 1) / 
+        this.performanceMetrics.totalRequests;
+    }
+    
+    this.performanceMetrics.lastRequestTime = Date.now();
+  }
+
+  /**
+   * Get performance metrics
+   */
+  getPerformanceMetrics() {
+    return {
+      ...this.performanceMetrics,
+      cacheHitRate: this.performanceMetrics.totalRequests > 0 ? 
+        (this.performanceMetrics.cacheHits / this.performanceMetrics.totalRequests) * 100 : 0
+    };
   }
 
   /**
