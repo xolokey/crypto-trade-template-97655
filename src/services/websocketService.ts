@@ -1,6 +1,6 @@
 // Enhanced WebSocket Service for Real-Time Market Data
 // Provides low-latency updates with exponential backoff reconnection
-// Performance optimized with message batching and connection pooling
+// Performance optimized with message batching, compression, and connection pooling
 
 type MessageHandler = (data: unknown) => void;
 type ErrorHandler = (error: Error) => void;
@@ -10,6 +10,9 @@ type PerformanceMetrics = {
   averageLatency: number;
   connectionUptime: number;
   reconnectCount: number;
+  compressionRatio: number;
+  memoryUsage: number;
+  activeSubscriptions: number;
 };
 
 export type ConnectionState = 
@@ -26,6 +29,11 @@ export interface WebSocketConfig {
   heartbeatInterval?: number;
   messageQueueSize?: number;
   enableAutoReconnect?: boolean;
+  enableCompression?: boolean;
+  batchSize?: number;
+  batchInterval?: number;
+  enablePerformanceMonitoring?: boolean;
+  maxMemoryUsage?: number; // MB
 }
 
 export interface ConnectionMetrics {
@@ -84,8 +92,13 @@ export class WebSocketService {
       reconnectInterval: 1000, // Start with 1 second
       maxReconnectAttempts: 10,
       heartbeatInterval: 30000,
-      messageQueueSize: 100,
+      messageQueueSize: 1000, // Increased for better batching
       enableAutoReconnect: true,
+      enableCompression: true,
+      batchSize: 50,
+      batchInterval: 16, // ~60fps for smooth updates
+      enablePerformanceMonitoring: true,
+      maxMemoryUsage: 100, // 100MB limit
       ...config
     };
   }

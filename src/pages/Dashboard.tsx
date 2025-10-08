@@ -3,13 +3,16 @@ import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { User } from "@supabase/supabase-js";
 import { Button } from "@/components/ui/button";
-import { LogOut, TrendingUp } from "lucide-react";
+import { LogOut, TrendingUp, Brain, BarChart3 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useStocks } from "@/hooks/useStocks";
 import { seedStocks } from "@/lib/seedStocks";
 import AIEnhancedDashboard from "@/components/dashboard/AIEnhancedDashboard";
 import { ConnectionStatusIndicator } from "@/components/realtime/ConnectionStatusIndicator";
 import { useRealTimeStock } from "@/hooks/useRealTimeStock";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import EnhancedAIDashboard from "@/components/dashboard/EnhancedAIDashboard";
+import EnhancedPerformanceMonitor from "@/components/monitoring/EnhancedPerformanceMonitor";
 
 export default function Dashboard() {
   const [user, setUser] = useState<User | null>(null);
@@ -126,8 +129,43 @@ export default function Dashboard() {
         </div>
       </header>
 
-      {/* AI Enhanced Dashboard */}
-      <AIEnhancedDashboard />
+      {/* Enhanced Dashboard with Tabs */}
+      <div className="container px-4 py-6">
+        <Tabs defaultValue="overview" className="w-full">
+          <TabsList className="grid w-full grid-cols-3 mb-6">
+            <TabsTrigger value="overview" className="flex items-center gap-2">
+              <BarChart3 className="h-4 w-4" />
+              Overview
+            </TabsTrigger>
+            <TabsTrigger value="ai-insights" className="flex items-center gap-2">
+              <Brain className="h-4 w-4" />
+              AI Insights
+            </TabsTrigger>
+            <TabsTrigger value="analytics" className="flex items-center gap-2">
+              <TrendingUp className="h-4 w-4" />
+              Analytics
+            </TabsTrigger>
+          </TabsList>
+          
+          <TabsContent value="overview">
+            <AIEnhancedDashboard />
+          </TabsContent>
+          
+          <TabsContent value="ai-insights">
+            <EnhancedAIDashboard />
+          </TabsContent>
+          
+          <TabsContent value="analytics">
+            <div className="space-y-6">
+              <AIEnhancedDashboard />
+              <div className="mt-8">
+                <h3 className="text-lg font-semibold mb-4">Performance Monitoring</h3>
+                <EnhancedPerformanceMonitor />
+              </div>
+            </div>
+          </TabsContent>
+        </Tabs>
+      </div>
       
       {/* Connection Status Indicator */}
       <ConnectionStatusIndicator
