@@ -9,10 +9,9 @@ import LogoCarousel from "@/components/LogoCarousel";
 import TestimonialsSection from "@/components/TestimonialsSection";
 import Footer from "@/components/Footer";
 import { TextGenerateEffect } from "@/components/ui/text-generate-effect";
-import { useNavigate } from "react-router-dom";
+
 
 const Index = () => {
-  const navigate = useNavigate();
   
   return (
     <div className="min-h-screen bg-black text-foreground">
@@ -76,7 +75,7 @@ const Index = () => {
             <Button 
               size="lg" 
               className="button-gradient shadow-lg hover:shadow-xl transition-all text-lg px-8"
-              onClick={() => navigate("/auth")}
+              onClick={() => window.location.assign('/auth')}
             >
               <Sparkles className="mr-2 h-5 w-5" />
               Start AI Analysis
@@ -85,7 +84,7 @@ const Index = () => {
               size="lg" 
               variant="outline" 
               className="text-white border-white/20 hover:bg-white/10 text-lg px-8"
-              onClick={() => navigate("/demo")}
+              onClick={() => window.location.assign('/demo')}
             >
               🚀 View Enhancements Demo
               <ArrowRight className="ml-2 w-5 h-5" />
@@ -172,7 +171,7 @@ const Index = () => {
           <p className="text-lg text-muted-foreground mb-8 max-w-2xl mx-auto">
             Join thousands of investors who track their Indian stocks with our platform.
           </p>
-          <Button size="lg" className="button-gradient" onClick={() => navigate("/auth")}>
+          <Button size="lg" className="button-gradient" onClick={() => window.location.assign('/auth')}>
             Create Account
             <ArrowRight className="ml-2 w-4 h-4" />
           </Button>
