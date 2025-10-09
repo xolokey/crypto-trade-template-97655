@@ -1,5 +1,5 @@
-import { StrictMode } from 'react'
-import { createRoot } from 'react-dom/client'
+import React from 'react'
+import ReactDOM from 'react-dom/client'
 import App from './App.tsx'
 import './index.css'
 import { debugEnvironment, testAPIAvailability } from './utils/debugEnv'
@@ -13,16 +13,8 @@ if (import.meta.env.DEV) {
   }, 2000);
 }
 
-createRoot(document.getElementById("root")!).render(
-  <StrictMode>
+ReactDOM.createRoot(document.getElementById("root")!).render(
+  <React.StrictMode>
     <App />
-  </StrictMode>
+  </React.StrictMode>
 );
-
-// Report web vitals in production
-// Temporarily disabled for build testing
-// if (import.meta.env.PROD) {
-//   import('./utils/performance').then(({ reportWebVitals }) => {
-//     reportWebVitals();
-//   });
-// }

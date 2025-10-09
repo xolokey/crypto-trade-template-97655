@@ -1,12 +1,15 @@
+import React from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { ThemeProvider } from "next-themes";
-import Index from "./pages/SafeIndex";
-import Auth from "./pages/Auth";
-import Dashboard from "./pages/Dashboard";
-import StockDetail from "./pages/StockDetail";
-import LiveMarket from "./pages/LiveMarket";
-import EnhancementsDemo from "./pages/EnhancementsDemo";
+
+// Lazy load pages to avoid hook issues during initial render
+const Index = React.lazy(() => import("./pages/Index"));
+const Auth = React.lazy(() => import("./pages/Auth"));
+const Dashboard = React.lazy(() => import("./pages/Dashboard"));
+const StockDetail = React.lazy(() => import("./pages/StockDetail"));
+const LiveMarket = React.lazy(() => import("./pages/LiveMarket"));
+const EnhancementsDemo = React.lazy(() => import("./pages/EnhancementsDemo"));
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -30,17 +33,23 @@ const queryClient = new QueryClient({
 const App = () => {
   return (
     <QueryClientProvider client={queryClient}>
-      <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
+      <ThemeProvider attribute="class" defaultTheme="dark" enableSystem={false} storageKey="stock-tracker-theme">
         <BrowserRouter>
           <div className="min-h-screen bg-background">
-            <Routes>
-              <Route path="/" element={<Index />} />
-              <Route path="/auth" element={<Auth />} />
-              <Route path="/dashboard" element={<Dashboard />} />
-              <Route path="/stock/:id" element={<StockDetail />} />
-              <Route path="/live-market" element={<LiveMarket />} />
-              <Route path="/demo" element={<EnhancementsDemo />} />
-            </Routes>
+            <React.Suspense fallback={
+              <div className="min-h-screen flex items-center justify-center">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+              </div>
+            }>
+              <Routes>
+                <Route path="/" element={<Index />} />
+                <Route path="/auth" element={<Auth />} />
+                <Route path="/dashboard" element={<Dashboard />} />
+                <Route path="/stock/:id" element={<StockDetail />} />
+                <Route path="/live-market" element={<LiveMarket />} />
+                <Route path="/demo" element={<EnhancementsDemo />} />
+              </Routes>
+            </React.Suspense>
           </div>
         </BrowserRouter>
       </ThemeProvider>
