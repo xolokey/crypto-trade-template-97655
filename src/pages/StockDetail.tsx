@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -55,7 +55,6 @@ const generateSampleData = (symbol: string, currentPrice: number) => {
 
 export default function StockDetail() {
   const { id } = useParams();
-  const navigate = useNavigate();
   const { toast } = useToast();
   const [stock, setStock] = useState<Stock | null>(null);
   const [isInWatchlist, setIsInWatchlist] = useState(false);
@@ -144,16 +143,19 @@ export default function StockDetail() {
 
   return (
     <div className="min-h-screen bg-background">
-      <header className="border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 sticky top-0 z-50">
+      <header className="border-b bg-card/50 backdrop-blur-xl supports-[backdrop-filter]:bg-card/30 sticky top-0 z-50 shadow-lg">
         <div className="container flex h-16 items-center justify-between px-4">
-          <Button variant="ghost" onClick={() => navigate("/dashboard")}>
-            <ArrowLeft className="mr-2 h-4 w-4" />
-            Back to Dashboard
-          </Button>
+          <Link to="/dashboard">
+            <Button variant="ghost">
+              <ArrowLeft className="mr-2 h-4 w-4" />
+              Back to Dashboard
+            </Button>
+          </Link>
           <Button
             variant={isInWatchlist ? "default" : "outline"}
             size="sm"
             onClick={toggleWatchlist}
+            className={isInWatchlist ? "button-gradient" : ""}
           >
             <Star className={`mr-2 h-4 w-4 ${isInWatchlist ? "fill-current" : ""}`} />
             {isInWatchlist ? "In Watchlist" : "Add to Watchlist"}

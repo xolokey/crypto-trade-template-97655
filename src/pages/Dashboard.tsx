@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { User } from "@supabase/supabase-js";
 import { Button } from "@/components/ui/button";
@@ -98,38 +98,40 @@ export default function Dashboard() {
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
-      <header className="border-b border-border/50 bg-card/30 backdrop-blur-xl sticky top-0 z-50">
+      <header className="border-b border-border/50 bg-card/30 backdrop-blur-xl sticky top-0 z-50 shadow-lg">
         <div className="container flex h-16 items-center justify-between px-4">
-          <div className="flex items-center gap-3">
-            <div className="h-10 w-10 rounded-lg bg-primary flex items-center justify-center">
+          <Link to="/" className="flex items-center gap-3 group">
+            <div className="h-10 w-10 rounded-lg bg-primary flex items-center justify-center group-hover:scale-110 transition-transform">
               <TrendingUp className="h-6 w-6 text-primary-foreground" />
             </div>
             <div>
               <h1 className="text-xl font-bold">Lokey & C0.</h1>
               <p className="text-xs text-muted-foreground">AI-Powered Stock Market</p>
             </div>
-          </div>
+          </Link>
           <div className="flex items-center gap-2">
-            <Button 
-              onClick={() => navigate("/demo")} 
-              variant="default" 
-              size="sm" 
-              className="bg-gradient-to-r from-primary to-accent text-white"
-            >
-              🚀 New Features
-            </Button>
-            <Button 
-              onClick={() => navigate("/live-market")} 
-              variant="outline" 
-              size="sm" 
-              className="border-primary/50 text-primary hover:bg-primary/10"
-            >
-              <div className="relative flex h-2 w-2 mr-2">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
-                <span className="relative inline-flex rounded-full h-2 w-2 bg-red-500"></span>
-              </div>
-              Live Market
-            </Button>
+            <Link to="/demo">
+              <Button 
+                variant="default" 
+                size="sm" 
+                className="bg-gradient-to-r from-primary to-accent text-white hover:opacity-90 transition-opacity"
+              >
+                🚀 New Features
+              </Button>
+            </Link>
+            <Link to="/live-market">
+              <Button 
+                variant="outline" 
+                size="sm" 
+                className="border-primary/50 text-primary hover:bg-primary/10"
+              >
+                <div className="relative flex h-2 w-2 mr-2">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+                  <span className="relative inline-flex rounded-full h-2 w-2 bg-red-500"></span>
+                </div>
+                Live Market
+              </Button>
+            </Link>
             <Button onClick={handleSignOut} variant="ghost" size="sm" className="text-muted-foreground hover:text-foreground">
               <LogOut className="mr-2 h-4 w-4" />
               Sign Out

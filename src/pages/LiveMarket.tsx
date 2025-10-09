@@ -3,7 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft, Maximize2, Minimize2 } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import LiveMarketIndices from '@/components/market/LiveMarketIndices';
 import LiveStockTicker from '@/components/market/LiveStockTicker';
 import { getNifty50Stocks } from '@/data/nseStocks';
@@ -21,7 +21,6 @@ interface LiveStock {
 }
 
 const LiveMarket = () => {
-  const navigate = useNavigate();
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [liveStocks, setLiveStocks] = useState<LiveStock[]>([]);
   const [currentTime, setCurrentTime] = useState(new Date());
@@ -85,18 +84,19 @@ const LiveMarket = () => {
   return (
     <div className="min-h-screen bg-black text-white">
       {/* Header */}
-      <div className="border-b border-white/10 bg-black/50 backdrop-blur-xl sticky top-0 z-50">
+      <div className="border-b border-white/10 bg-black/50 backdrop-blur-xl sticky top-0 z-50 shadow-2xl">
         <div className="container flex h-16 items-center justify-between px-4">
           <div className="flex items-center gap-4">
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => navigate('/dashboard')}
-              className="text-white hover:text-primary"
-            >
-              <ArrowLeft className="h-4 w-4 mr-2" />
-              Back to Dashboard
-            </Button>
+            <Link to="/dashboard">
+              <Button
+                variant="ghost"
+                size="sm"
+                className="text-white hover:text-primary"
+              >
+                <ArrowLeft className="h-4 w-4 mr-2" />
+                Back to Dashboard
+              </Button>
+            </Link>
             <div className="flex items-center gap-3">
               <div className="relative flex h-3 w-3">
                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
