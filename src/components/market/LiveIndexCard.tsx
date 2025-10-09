@@ -21,7 +21,7 @@ export function LiveIndexCard() {
 
   const fetchIndexData = async () => {
     try {
-      const data = await marketDataService.getNSEData('index');
+      const data = await marketDataService.getNSEData('index') as unknown as IndexData;
       if (data) {
         setIndexData(data);
         setError(null);

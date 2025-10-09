@@ -42,7 +42,7 @@ const EnhancedAIDashboard: React.FC = () => {
   const [portfolioAnalysis, setPortfolioAnalysis] = useState<any>(null);
   const [marketOverview, setMarketOverview] = useState<any>(null);
   
-  const { stocks } = useStocks();
+  const { niftyStocks, sensexStocks } = useStocks();
   const { data: realTimeData } = useRealTimeStock({ symbol: selectedSymbol });
 
   // Top performing stocks for analysis

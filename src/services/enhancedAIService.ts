@@ -303,8 +303,8 @@ class EnhancedAIService {
         risks: ['Market volatility', 'Technical indicator divergence'],
         opportunities: ['Technical breakout potential', 'Favorable risk-reward ratio'],
         recommendation: {
-          action: technical.recommendation.action === 'buy' ? 'buy' : 
-                  technical.recommendation.action === 'sell' ? 'sell' : 'hold',
+          action: (technical.recommendation.action === 'buy' ? 'buy' : 
+                  technical.recommendation.action === 'sell' ? 'sell' : 'hold') as 'buy' | 'sell' | 'hold' | 'strong_buy' | 'strong_sell',
           confidence: technical.recommendation.confidence,
           reasoning: technical.recommendation.reasoning.join(', ')
         }
@@ -475,6 +475,10 @@ class EnhancedAIService {
     // Parse the AI response into structured format
     const lines = response.split('\n').filter(line => line.trim());
     
+    // Determine action type
+    const action = technical.recommendation.action === 'buy' ? 'buy' : 
+                   technical.recommendation.action === 'sell' ? 'sell' : 'hold';
+    
     return {
       summary: lines.find(line => line.includes('summary') || line.length > 100)?.replace(/^\d+\.\s*/, '') || 
                `Technical analysis shows ${technical.trend.shortTerm} trend with ${technical.signals.length} active signals.`,
@@ -482,12 +486,11 @@ class EnhancedAIService {
       risks: ['Market volatility', 'Technical indicator divergence', 'Sector-specific risks'],
       opportunities: ['Technical breakout potential', 'Favorable risk-reward setup', 'Strong momentum indicators'],
       recommendation: {
-        action: technical.recommendation.action === 'buy' ? 'buy' : 
-                technical.recommendation.action === 'sell' ? 'sell' : 'hold',
+        action: action as 'buy' | 'sell' | 'hold' | 'strong_buy' | 'strong_sell',
         confidence: technical.recommendation.confidence,
         reasoning: `Based on ${technical.signals.length} signals and ${technical.trend.shortTerm} trend`,
         targetPrice: prediction.predictions[2].predictedPrice,
-        stopLoss: prediction.predictions[2].predictedPrice * (technical.recommendation.action === 'buy' ? 0.95 : 1.05)
+        stopLoss: prediction.predictions[2].predictedPrice * (action === 'buy' ? 0.95 : 1.05)
       }
     };
   }

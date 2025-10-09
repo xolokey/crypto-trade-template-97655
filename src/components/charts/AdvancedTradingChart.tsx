@@ -49,7 +49,6 @@ export interface ChartData extends OHLCV {
   histogram?: number;
   bollingerUpper?: number;
   bollingerLower?: number;
-  volume?: number;
 }
 
 interface AdvancedTradingChartProps {

@@ -112,7 +112,7 @@ class MarketDataService {
     const result: MarketDataResponse = await response.json();
     
     if (result.success && result.data) {
-      return result.data;
+      return result.data as StockQuote;
     }
 
     console.warn(`No data returned for ${symbol}`);
@@ -137,12 +137,12 @@ class MarketDataService {
       
       if (result.success && Array.isArray(result.data)) {
         // Cache each result
-        result.data.forEach((quote: StockQuote) => {
+        (result.data as StockQuote[]).forEach((quote: StockQuote) => {
           this.setCache(quote.symbol, quote);
         });
         
         console.log(`✅ Real data fetched for ${symbols.length} stocks`);
-        return result.data;
+        return result.data as StockQuote[];
       }
 
       console.warn('No data returned for multiple quotes');
@@ -165,8 +165,8 @@ class MarketDataService {
       const result: MarketDataResponse = await response.json();
       
       if (result.success && result.data) {
-        this.setCache(symbol, result.data);
-        return result.data;
+        this.setCache(symbol, result.data as StockQuote);
+        return result.data as StockQuote;
       }
 
       return null;
@@ -188,8 +188,8 @@ class MarketDataService {
       const result: MarketDataResponse = await response.json();
       
       if (result.success && result.data) {
-        this.setCache(symbol, result.data);
-        return result.data;
+        this.setCache(symbol, result.data as StockQuote);
+        return result.data as StockQuote;
       }
 
       return null;
@@ -239,7 +239,7 @@ class MarketDataService {
 
     // Increment hit count
     cached.hitCount++;
-    return { data: cached.data, hitCount: cached.hitCount };
+    return { data: cached.data as StockQuote, hitCount: cached.hitCount };
   }
 
   private setCache(key: string, data: StockQuote): void {

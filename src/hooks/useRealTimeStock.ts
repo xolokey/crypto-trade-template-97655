@@ -133,10 +133,10 @@ export function useRealTimeStock({
       const wsService = wsServiceRef.current;
 
       // Set up message handler
-      const unsubscribeMessage = wsService.onMessage((message) => {
+      const unsubscribeMessage = wsService.onMessage((message: any) => {
         if (message.type === 'price_update' && message.symbol === symbol) {
           if (isMountedRef.current) {
-            setData(message.data);
+            setData(message.data as StockQuote);
             setLastUpdate(new Date(message.timestamp));
             setLoading(false);
             
@@ -147,7 +147,7 @@ export function useRealTimeStock({
             }
             
             if (onUpdate) {
-              onUpdate(message.data);
+              onUpdate(message.data as StockQuote);
             }
           }
         }

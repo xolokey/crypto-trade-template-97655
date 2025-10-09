@@ -97,7 +97,7 @@ const AdvancedStockScreener: React.FC = () => {
   const [screenerName, setScreenerName] = useState('');
   const [showSaveDialog, setShowSaveDialog] = useState(false);
   
-  const { stocks } = useStocks();
+  const { niftyStocks, sensexStocks } = useStocks();
 
   // Available sectors
   const sectors = [

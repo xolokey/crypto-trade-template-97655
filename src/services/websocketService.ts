@@ -82,7 +82,10 @@ export class WebSocketService {
     messagesPerSecond: 0,
     averageLatency: 0,
     connectionUptime: 0,
-    reconnectCount: 0
+    reconnectCount: 0,
+    compressionRatio: 1.0,
+    memoryUsage: 0,
+    activeSubscriptions: 0
   };
   private messageCountWindow: number[] = [];
   private readonly METRICS_WINDOW_SIZE = 60; // 60 seconds
@@ -298,6 +301,9 @@ export class WebSocketService {
     // Update other metrics
     this.performanceMetrics.averageLatency = this.getLatency();
     this.performanceMetrics.reconnectCount = this.reconnectAttempts;
+    this.performanceMetrics.activeSubscriptions = this.subscribedSymbols.size;
+    this.performanceMetrics.memoryUsage = (this.messageQueue.length * 1024) / (1024 * 1024); // Rough estimate in MB
+    this.performanceMetrics.compressionRatio = 1.0; // Default, would need actual compression implementation
   }
 
   /**
