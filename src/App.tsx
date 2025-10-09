@@ -9,6 +9,7 @@ import Dashboard from "./pages/Dashboard";
 import StockDetail from "./pages/StockDetail";
 import LiveMarket from "./pages/LiveMarket";
 import EnhancementsDemo from "./pages/EnhancementsDemo";
+import { ThemeProvider } from "next-themes";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -31,20 +32,22 @@ const queryClient = new QueryClient({
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
-    <BrowserRouter>
-      <div className="min-h-screen bg-background">
-        <Toaster />
-        <Sonner />
-        <Routes>
-          <Route path="/" element={<Index />} />
-          <Route path="/auth" element={<Auth />} />
-          <Route path="/dashboard" element={<Dashboard />} />
-          <Route path="/stock/:id" element={<StockDetail />} />
-          <Route path="/live-market" element={<LiveMarket />} />
-          <Route path="/demo" element={<EnhancementsDemo />} />
-        </Routes>
-      </div>
-    </BrowserRouter>
+    <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
+      <BrowserRouter>
+        <div className="min-h-screen bg-background">
+          <Toaster />
+          <Sonner />
+          <Routes>
+            <Route path="/" element={<Index />} />
+            <Route path="/auth" element={<Auth />} />
+            <Route path="/dashboard" element={<Dashboard />} />
+            <Route path="/stock/:id" element={<StockDetail />} />
+            <Route path="/live-market" element={<LiveMarket />} />
+            <Route path="/demo" element={<EnhancementsDemo />} />
+          </Routes>
+        </div>
+      </BrowserRouter>
+    </ThemeProvider>
   </QueryClientProvider>
 );
 
