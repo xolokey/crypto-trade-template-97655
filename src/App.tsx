@@ -31,11 +31,11 @@ const queryClient = new QueryClient({
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
-    <TooltipProvider>
-      <div className="min-h-screen bg-background">
-        <Toaster />
-        <Sonner />
-        <BrowserRouter>
+    <BrowserRouter>
+      <TooltipProvider delayDuration={0}>
+        <div className="min-h-screen bg-background">
+          <Toaster />
+          <Sonner />
           <Routes>
             <Route path="/" element={<Index />} />
             <Route path="/auth" element={<Auth />} />
@@ -44,9 +44,9 @@ const App = () => (
             <Route path="/live-market" element={<LiveMarket />} />
             <Route path="/demo" element={<EnhancementsDemo />} />
           </Routes>
-        </BrowserRouter>
-      </div>
-    </TooltipProvider>
+        </div>
+      </TooltipProvider>
+    </BrowserRouter>
   </QueryClientProvider>
 );
 
